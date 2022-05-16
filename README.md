@@ -16,3 +16,8 @@ pip install -r requirements.txt
 
 ## to run the project on your pc.
 python main.py
+
+## We Are using Facerecognition library that depends on c++ and dlib 
+## So we have to install c++ compiler using visual studio installation
+## Visual Studio Community is enough
+here -> https://visualstudio.microsoft.com/downloads/

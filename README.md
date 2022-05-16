@@ -20,4 +20,5 @@ python main.py
 ## We Are using Facerecognition library that depends on c++ and dlib 
 ## So we have to install c++ compiler using visual studio installation
 ## Visual Studio Community is enough
+## Just install c++ for desktop development (download about 1.8 gb) (real space is about 8.16 gb)
 here -> https://visualstudio.microsoft.com/downloads/

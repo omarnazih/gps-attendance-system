@@ -4,13 +4,6 @@ from flask import Flask, jsonify,session, render_template, request, redirect, ur
 from functools import wraps
 from datetime import datetime
 
-def fetchQuery(query):
-   conn = db.connect()             
-   sql = query
-   result = conn.execute(sql).fetchall()  
-   # print(result)
-   return result
-
 # Check if user logged in
 def is_logged_in(f):
     @wraps(f)
@@ -35,7 +28,7 @@ def home_page():
    result = cur.execute("select * from system_users")
 
    res = cur.fetchall()   
-   return render_template('login.html', title = "home page", res=res)
+   return render_template('home.html', title = "home page", res=res)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():    
@@ -51,12 +44,9 @@ def login():
       sql = "select * from system_users where name = '{}';".format(username)
       result = cur.execute(sql)
 
-      result = cur.fetchall()       
-      # result = conn.execute(sql).fetchall()             
-      
-      print(result)
-      if len(result) > 0 :  
-         print(result[0])       
+      result = cur.fetchall()             
+            
+      if len(result) > 0 :             
          password = result[0]['pwd']
          
          user_id = result[0]['id']
@@ -65,14 +55,14 @@ def login():
          # We put the hashed first then the sent value    
          # if bcrypt.check_password_hash(password, password_candidate):            
             # Passed
-         session['logged_in'] = True
-         session['username'] = username
-         session['user_id'] = user_id                        
-         
-         return redirect(url_for('home_page'))               
-         # else :            
-         #    flash("Invalid Login", 'alert-danger')                  
-         #    return render_template('login.html', title = "Login")            
+         if password_candidate == password :   
+            session['logged_in'] = True
+            session['username'] = username
+            session['user_id'] = user_id                                 
+            return redirect(url_for('home_page'))               
+         else :            
+            flash("Invalid Login", 'alert-danger')                  
+            return render_template('login.html', title = "Login")            
       else :   
          flash("User Name Not Found", 'alert-danger')                  
          return render_template('login.html', title = "Login")

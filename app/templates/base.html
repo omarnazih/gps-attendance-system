@@ -13,10 +13,10 @@
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css"> 
   
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.min.css')}}">
+  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.min.css')}}"> -->
   <link href="{{ url_for('static', filename='css/bootstrap.min.css')}}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/global.css')}}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/sidebars.css')}}" rel="stylesheet">
+  <!-- <link href="{{ url_for('static', filename='css/global.css')}}" rel="stylesheet"> -->
+  <!-- <link href="{{ url_for('static', filename='css/sidebars.css')}}" rel="stylesheet"> -->
   <style>
     .bd-placeholder-img {
       font-size: 1.125rem;
@@ -31,21 +31,22 @@
         font-size: 3.5rem;
       }
     }    
-  </style>      
+  </style>     
+   
   {% block css %}
   {% endblock %}  
 
 </head>
 <body>    
   <main>
-  {% include 'includes/_navbar.html' %}    
-  {% block bgimage %}{% endblock %}   
+    {% include 'includes/_navbar.html' %}      
+    
+  
   <div class="container"> 
     {% include 'includes/_messages.html' %}    
-    <!-- <h4 class="text-light bg-primary bg-gradient p-2 col-sm-2 mt-2 rounded"> -->
-      {% block maintitle %}{% endblock %}      
-    <!-- </h4>    -->
-    
+   
+    {% block hero %}{% endblock %} 
+    {% block classList %}{% endblock %}
     {% block content %}{% endblock %} 
     
   </div> 
@@ -53,9 +54,9 @@
   </main>
   
   <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
+  <!-- <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
   <script src="{{ url_for('static', filename='js/sidebars.js')}}"></script> 
-  <script src="{{ url_for('static', filename='js/global.js')}}"></script> 
+  <script src="{{ url_for('static', filename='js/global.js')}}"></script>  -->
 
   <!-- Future Javascript files -->
   {% block javascript %}  

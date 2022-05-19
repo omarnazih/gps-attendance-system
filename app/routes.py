@@ -74,3 +74,22 @@ def logout():
    session.clear()
    flash("Your are now logged out", 'alert-success')
    return redirect(url_for('login'))   
+
+# System Users PK
+@app.route('/takeattendance/<string:classID>')
+@is_logged_in
+# @is_allowed_view('show_system_rights')
+def take_attendance(classID):   
+
+   # # Get sysem modules
+   # if len(fetch_system_rights(id)) > 0: 
+   #    modulesList = fetch_system_rights(id)         
+   # else :         
+   #    modulesList = fetch_system_modules()         
+
+   # if len(usersList) > 0:
+   return render_template('take_attendance.html', title = "Take Attendance")
+      # return render_template('take_attendance.html', title = "Take Attendance", takeAttendanceCursor=takeAttendanceCursor)
+   # else:
+   #    msg = 'No Users Found'
+   #    return render_template('take_attendance.html', title = "System Rights", msg=msg)

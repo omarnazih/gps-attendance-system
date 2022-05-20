@@ -8,8 +8,56 @@
 {% endblock %}
 
 {% block content %}
-<div class="takeattendance mt-5">
-  <h1>This is take Attendance</h1>
+<div class="takeattendance" style="margin-top: 5rem;">
+  <h1>Take Attendance</h1>
+  <div class="camera d-flex flex-column align-items-center">
+    <video id="webcam" autoplay playsinline width="640" height="480"></video>
+    <canvas id="canvas" class="d-none"></canvas>       
+    <a id="download-photo" href="">Download</a>
+    <button id="takePicture" type="button" class="btn btn-primary btn-lg px-4 gap-3">Capture And Submit</button>
+  </div>
+
 </div>  
+{% endblock %} 
+
+{% block javascript %}  
+<script type="text/javascript" src="https://unpkg.com/webcam-easy/dist/webcam-easy.min.js"></script>
+<script>
+  const webcamElement = document.getElementById('webcam');
+  const canvasElement = document.getElementById('canvas');  
+  const webcam = new Webcam(webcamElement, 'user', canvasElement);  
+
+  webcam.start()
+   .then(result =>{
+      console.log("webcam started");
+   })
+   .catch(err => {
+       console.log(err);
+   });  
+
+  document.querySelector("#takePicture").addEventListener('click',()=>{
+    let picture = webcam.snap();
+    document.querySelector('#download-photo').href = picture;
+
+    newUrl = `${window.origin}/faceauth`;    
+
+    data = {'base64Image':picture};
+
+    postData(newUrl, data).then((response) => {    
+    if (response.data != true) {
+      // disableAllInputs();
+      alert(data)
+    } else {
+      return
+    }
+    }); 
+  
+  });
+    
+  // $('#cameraFlip').click(function() {
+  //   webcam.flip();
+  //   webcam.start();  
+  // });  
+</script>
 {% endblock %} 
 

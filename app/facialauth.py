@@ -1,5 +1,7 @@
 import cv2
+import base64
 import numpy as np
+import io
 import face_recognition
 import os
 
@@ -11,15 +13,33 @@ def findEncodings(images):
         encodeList.append(encode)
     return encodeList
 
-def checkSamePerson(baseImage, newImage):
+def readb64(uri):
+#    encoded_data = uri.split(',')[1]
+   encoded_data = uri
+#    nparr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
+   img = cv2.imdecode(uri, cv2.IMREAD_COLOR)
+   return img
+
+def checkSamePerson(baseImage, newImage, isBase64='N'):
 
     baseImagePath = baseImage
+    
+    print(baseImagePath)
+    # if isBase64 == 'Y':
+    #     # b64_bytes = base64.b64encode(newImage)
+    #     # b64_string = b64_bytes.decode()
+
+    #     # reconstruct image as an numpy array
+    #     # pic = ""
+    #     newImage = readb64(newImage)  
+    # else:
     newImagePath = newImage
-        
-    baseImage = cv2.imread(baseImagePath)   
     newImage =  cv2.imread(newImagePath)  
 
-
+    baseImage = cv2.imread(baseImagePath)   
+    
+    print(newImage)
+    print(baseImage)
     # Training the face recognition model
     imagesList = []
     imagesList.append(baseImage)

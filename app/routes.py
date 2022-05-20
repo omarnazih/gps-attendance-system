@@ -2,6 +2,7 @@ import os
 from app import app, db
 from flask import Flask, jsonify,session, render_template, request, redirect, url_for,flash,make_response, Response,send_from_directory
 from functools import wraps
+from app.facialauth import checkSamePerson
 from datetime import datetime
 
 # Check if user logged in
@@ -23,7 +24,7 @@ def is_logged_in(f):
 def home_page():  
    # Create cursor
    cur = db.connection.cursor() 
-
+   
    # Get articles
    result = cur.execute("select * from system_users")
 
@@ -93,3 +94,15 @@ def take_attendance(classID):
    # else:
    #    msg = 'No Users Found'
    #    return render_template('take_attendance.html', title = "System Rights", msg=msg)
+
+
+@app.route('/faceauth', methods=['GET', 'POST'])
+@is_logged_in
+def face_auth():   
+   image = request.args.get('base64Image');
+   # print(image)
+   # print(image)
+   # res = checkSamePerson('images/omar.jpg', image, 'Y')
+   res = checkSamePerson('images/omar.jpg', 'images/profile.jpg', 'N')
+   return jsonify(data=res) 
+   # return render_template('take_attendance.html', title = "Take Attendance")   

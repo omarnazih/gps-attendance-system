@@ -14,32 +14,27 @@ def findEncodings(images):
     return encodeList
 
 def readb64(uri):
-#    encoded_data = uri.split(',')[1]
-   encoded_data = uri
-#    nparr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
-   img = cv2.imdecode(uri, cv2.IMREAD_COLOR)
+   encoded_data = uri.split(',')[1]
+   nparr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
+   img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
    return img
 
 def checkSamePerson(baseImage, newImage, isBase64='N'):
 
     baseImagePath = baseImage
-    
-    print(baseImagePath)
-    # if isBase64 == 'Y':
-    #     # b64_bytes = base64.b64encode(newImage)
-    #     # b64_string = b64_bytes.decode()
-
-    #     # reconstruct image as an numpy array
-    #     # pic = ""
-    #     newImage = readb64(newImage)  
-    # else:
-    newImagePath = newImage
-    newImage =  cv2.imread(newImagePath)  
+        
+    if isBase64 == 'Y':
+        newImage = readb64(newImage)  
+        print("it's base 64")
+        # print(newImage)
+    else:
+        newImagePath = newImage
+        newImage =  cv2.imread(newImagePath)  
 
     baseImage = cv2.imread(baseImagePath)   
-    
-    print(newImage)
-    print(baseImage)
+
+    # print(newImage)
+    # print(baseImage)
     # Training the face recognition model
     imagesList = []
     imagesList.append(baseImage)
@@ -48,10 +43,16 @@ def checkSamePerson(baseImage, newImage, isBase64='N'):
     imgS = cv2.resize(newImage, (0, 0), None, 0.25, 0.25)
     imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
 
-    facesCurFrame = face_recognition.face_locations(imgS)
-    encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
+    # cv2.imshow("test", imgS)        
+    # cv2.waitKey(0)   
 
-    for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):        
+    facesCurFrame = face_recognition.face_locations(imgS) 
+    encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
+    print(facesCurFrame)
+    print(encodesCurFrame)
+    for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):   
+        # print(encodedImage)     
+        # print(encodeFace)
         matches = face_recognition.compare_faces(encodedImage, encodeFace)
         print(matches[0])
         return matches[0]

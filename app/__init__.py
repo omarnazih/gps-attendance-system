@@ -14,6 +14,7 @@ app.config['SESSION_TYPE'] = 'filesystem'
 
 # App Configrations
 app.config['UPLOAD_FOLDER']='app/uploader/'
+app.config['IMAGES_FOLDER']='app/images/'
 app.config['TEMPLATES']='app/templates/'
 app.config['UPLOAD_IMAGE']='app/static/img/'
 app.config['MAX_CONTENT_PATH']=5*1024*1024

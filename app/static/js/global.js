@@ -15,3 +15,14 @@ async function postData(url = "", data = {}) {
   });
   return response.json(); // parses JSON response into native JavaScript objects
 }
+
+// Flash Messages
+function flash(message, category) {
+  const messagesContainer = document.getElementById("messages-container");
+  messagesContainer.innerHTML = `
+  <div class="alert ${category} alert-dismissible fade show" role="alert">
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  `;
+}

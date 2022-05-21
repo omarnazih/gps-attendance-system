@@ -1,4 +1,5 @@
 import os
+import base64
 from app import app, db
 from flask import Flask, jsonify,session, render_template, request, redirect, url_for,flash,make_response, Response,send_from_directory
 from functools import wraps
@@ -99,10 +100,22 @@ def take_attendance(classID):
 @app.route('/faceauth', methods=['GET', 'POST'])
 @is_logged_in
 def face_auth():   
-   image = request.args.get('base64Image');
+   json = request.get_json();   
+   # print(type(image))
+   image = json['picture']
+   # image_64_decode = base64.b64decode(json['picture']) 
+   # print(image_64_decode)
+   # print(image_64_decode)
    # print(image)
    # print(image)
-   # res = checkSamePerson('images/omar.jpg', image, 'Y')
-   res = checkSamePerson('images/omar.jpg', 'images/profile.jpg', 'N')
-   return jsonify(data=res) 
+   res = checkSamePerson(app.config['IMAGES_FOLDER']+'/menna.jpeg', image, 'Y')
+   # res = checkSamePerson(app.config['IMAGES_FOLDER']+'/omar.jpg', app.config['IMAGES_FOLDER']+'/profile.jpg', 'N')
+   # res = checkSamePerson('images/omar.jpg', 'images/profile.jpg', 'N')
+   # res = True
+   print(res)
+   if res == True:
+      return jsonify(data="True") 
+   else :
+      return jsonify(data="False") 
+
    # return render_template('take_attendance.html', title = "Take Attendance")   

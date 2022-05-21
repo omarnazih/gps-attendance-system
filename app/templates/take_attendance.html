@@ -8,13 +8,17 @@
 {% endblock %}
 
 {% block content %}
+<div class="alert alert-warning alert-dismissible fade show" style="margin-top: 5rem;" role="alert">
+  Please Make Sure your face is close to the camera
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
 <div class="takeattendance" style="margin-top: 5rem;">
   <h1>Take Attendance</h1>
   <div class="camera d-flex flex-column align-items-center">
     <video id="webcam" autoplay playsinline width="640" height="480"></video>
-    <canvas id="canvas" class="d-none"></canvas>       
-    <a id="download-photo" href="">Download</a>
-    <button id="takePicture" type="button" class="btn btn-primary btn-lg px-4 gap-3">Capture And Submit</button>
+    <canvas id="canvas" class="d-none"></canvas>           
+    <button  id="takePicture" type="button" class="btn btn-primary btn-lg px-4 gap-3 mt-2">Capture And Submit</button>
   </div>
 
 </div>  
@@ -36,18 +40,20 @@
    });  
 
   document.querySelector("#takePicture").addEventListener('click',()=>{
-    let picture = webcam.snap();
-    document.querySelector('#download-photo').href = picture;
+    let picture = webcam.snap();    
 
     newUrl = `${window.origin}/faceauth`;    
 
-    data = {'base64Image':picture};
+    const data = {picture};
 
+    console.log(data)
     postData(newUrl, data).then((response) => {    
-    if (response.data != true) {
-      // disableAllInputs();
-      alert(data)
+    if (response.data != true) {      
+      console.log(response.data)
+      alert(response.data)
+      // flash(`server says : ${response.data}`,"success")
     } else {
+      // flash(`server says : ${response.data}`,"danger")
       return
     }
     }); 

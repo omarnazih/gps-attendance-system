@@ -4,7 +4,7 @@ from app import app, db
 from flask import Flask, jsonify,session, render_template, request, redirect, url_for,flash,make_response, Response,send_from_directory
 from functools import wraps
 from app.facialauth import checkSamePerson
-from datetime import datetime
+import datetime
 
 # Check if user logged in
 def is_logged_in(f):
@@ -26,11 +26,11 @@ def home_page():
    # Create cursor
    cur = db.connection.cursor() 
    
-   # Get articles
-   result = cur.execute("select * from system_users")
+   # Get System Users
+   result = cur.execute("select * from classes")
+   classData = cur.fetchall()   
 
-   res = cur.fetchall()   
-   return render_template('home.html', title = "home page", res=res)
+   return render_template('home.html', title = "home page", classData = classData)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():    
@@ -42,19 +42,16 @@ def login():
       # Create cursor
       cur = db.connection.cursor() 
 
-      # Get articles
+      # Get system users
       sql = "select * from system_users where name = '{}';".format(username)
       result = cur.execute(sql)
-
       result = cur.fetchall()             
             
       if len(result) > 0 :             
-         password = result[0]['pwd']
-         
+         password = result[0]['pwd']         
          user_id = result[0]['id']
          
          # Compare Passwords     
-         # We put the hashed first then the sent value    
          # if bcrypt.check_password_hash(password, password_candidate):            
             # Passed
          if password_candidate == password :   
@@ -64,58 +61,97 @@ def login():
             return redirect(url_for('home_page'))               
          else :            
             flash("Invalid Login", 'alert-danger')                  
-            return render_template('login.html', title = "Login")            
+            return render_template('login.html')            
       else :   
          flash("User Name Not Found", 'alert-danger')                  
-         return render_template('login.html', title = "Login")
+         return render_template('login.html')
       
-   return render_template('login.html', title = "Login")
+   return render_template('login.html')
 
 @app.route('/logout')
 def logout():
    session.clear()
-   flash("Your are now logged out", 'alert-success')
    return redirect(url_for('login'))   
 
-# System Users PK
-@app.route('/takeattendance/<string:classID>')
+@app.route('/classes')
 @is_logged_in
-# @is_allowed_view('show_system_rights')
+def classes():    
+   # Create cursor
+   cur = db.connection.cursor() 
+   
+   # Get System Users
+   result = cur.execute("select * from classes")
+   classData = cur.fetchall()   
+
+   return render_template('classes.html', title = "Classes", classData = classData)
+
+@app.route('/takeattendance/<string:classID>', methods=['GET', 'POST'])
+@is_logged_in
 def take_attendance(classID):   
+   # Create cursor
+   cur = db.connection.cursor() 
 
-   # # Get sysem modules
-   # if len(fetch_system_rights(id)) > 0: 
-   #    modulesList = fetch_system_rights(id)         
-   # else :         
-   #    modulesList = fetch_system_modules()         
+   if request.method == 'GET':
 
-   # if len(usersList) > 0:
-   return render_template('take_attendance.html', title = "Take Attendance")
-      # return render_template('take_attendance.html', title = "Take Attendance", takeAttendanceCursor=takeAttendanceCursor)
-   # else:
-   #    msg = 'No Users Found'
-   #    return render_template('take_attendance.html', title = "System Rights", msg=msg)
+      # Get Data
+      sql = "select * from classes where id = '{}';".format(classID)
+      result = cur.execute(sql)
+      classData = cur.fetchone()  
 
+      return render_template('take_attendance.html', title = "Take Attendance", classData = classData)
+
+   elif request.method == 'POST':
+      CurrentDate=datetime.date.today()  
+      
+      cur.execute("select id from students where user_id = {}".format(session['user_id']))
+      res = cur.fetchone()        
+      student_id = res['id']
+
+      cur.execute("select IFNULL(max(id),0)+1 as id from attendance")
+      res = cur.fetchone()        
+      attendance_id = res['id']
+      
+      cur.execute(f"select 1 as val from attendance where date = '{CurrentDate}' and student_id = {student_id} and class_id= {classID}")
+      res = cur.fetchone() 
+
+      if res == None:          
+         # Insert Data
+         sql = """
+               insert into attendance (id, date, student_id, class_id)
+               values ({}, '{}' , {}, {});      
+               """.format(attendance_id, CurrentDate, student_id, classID)
+               
+         result = cur.execute(sql)      
+         db.connection.commit()      
+         
+         return jsonify(response="Success")    
+         
+      else :   
+         return jsonify(response="Attendance Taken Before")                  
 
 @app.route('/faceauth', methods=['GET', 'POST'])
 @is_logged_in
 def face_auth():   
    json = request.get_json();   
-   # print(type(image))
    image = json['picture']
-   # image_64_decode = base64.b64decode(json['picture']) 
-   # print(image_64_decode)
-   # print(image_64_decode)
-   # print(image)
-   # print(image)
-   res = checkSamePerson(app.config['IMAGES_FOLDER']+'/menna.jpeg', image, 'Y')
-   # res = checkSamePerson(app.config['IMAGES_FOLDER']+'/omar.jpg', app.config['IMAGES_FOLDER']+'/profile.jpg', 'N')
-   # res = checkSamePerson('images/omar.jpg', 'images/profile.jpg', 'N')
-   # res = True
-   print(res)
-   if res == True:
-      return jsonify(data="True") 
-   else :
-      return jsonify(data="False") 
+   classID = json['classIDVal']
 
-   # return render_template('take_attendance.html', title = "Take Attendance")   
+   res = checkSamePerson(app.config['IMAGES_FOLDER']+'/omar.jpg', image, 'Y')
+   
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   # Get system users
+   sql = "select * from classes where id = '{}';".format(classID)
+   result = cur.execute(sql)
+   classData = cur.fetchone()  
+
+   if res == True:
+      return jsonify(isSamePerson="True", classData = classData) 
+   else :
+      return jsonify(isSamePerson="False", classData = classData) 
+
+# absolute_path = os.path.abspath(app.config['UPLOAD_FOLDER'] + secure_filename(f.filename))
+
+
+   

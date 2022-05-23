@@ -20,21 +20,16 @@ def readb64(uri):
    return img
 
 def checkSamePerson(baseImage, newImage, isBase64='N'):
-
     baseImagePath = baseImage
         
     if isBase64 == 'Y':
         newImage = readb64(newImage)  
-        print("it's base 64")
-        # print(newImage)
     else:
         newImagePath = newImage
         newImage =  cv2.imread(newImagePath)  
 
     baseImage = cv2.imread(baseImagePath)   
 
-    # print(newImage)
-    # print(baseImage)
     # Training the face recognition model
     imagesList = []
     imagesList.append(baseImage)
@@ -48,19 +43,9 @@ def checkSamePerson(baseImage, newImage, isBase64='N'):
 
     facesCurFrame = face_recognition.face_locations(imgS) 
     encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
-    print(facesCurFrame)
-    print(encodesCurFrame)
+
     for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):   
-        # print(encodedImage)     
-        # print(encodeFace)
         matches = face_recognition.compare_faces(encodedImage, encodeFace)
         print(matches[0])
         return matches[0]
-        # print(matches)
-        # faceDis = face_recognition.face_distance(encodedImage, encodeFace)
-        # #Printing Face Distance
-        # print(faceDis)
-        # matchIndex = np.argmin(faceDis)
-             
-# For testing
-# checkSamePerson('Training_images/omar.jpg', 'Test_images/false_test.jpg')             
+      

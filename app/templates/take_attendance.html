@@ -1,69 +1,155 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} 
 
-{% block title %}
-  {{title}}
-{% endblock %}
+{% block title %} {{title}} {% endblock %} 
 
-{% block css %}  
-{% endblock %}
+{% block css %} 
+<style>
+  @media only screen and (max-width: 768px) {
+    #webcam{
+      width:400px;
+      height:300px;
+    }
+  }
+</style>
+{% endblock %} 
 
 {% block content %}
-<div class="alert alert-warning alert-dismissible fade show" style="margin-top: 5rem;" role="alert">
-  Please Make Sure your face is close to the camera
-  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div
+  class="alert alert-warning alert-dismissible fade show"
+  style="margin-top: 5rem"
+  role="alert"
+>
+  Please Make Sure your face is close to the camera,  
+   And make sure you stand at the same spot as the professor/teacher 's  device
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close"
+  ></button>
 </div>
 
-<div class="takeattendance" style="margin-top: 5rem;">
-  <h1>Take Attendance</h1>
+{% if classData %}
+<div class="takeattendance" style="margin-top: 5rem">
   <div class="camera d-flex flex-column align-items-center">
+    <input type="hidden" id="class_id" value="{{ classData.id }}">
+    <h1 class="mb-4">Take Attendance for <u>{{ classData.name }}</u>  Class </h1>
     <video id="webcam" autoplay playsinline width="640" height="480"></video>
-    <canvas id="canvas" class="d-none"></canvas>           
-    <button  id="takePicture" type="button" class="btn btn-primary btn-lg px-4 gap-3 mt-2">Capture And Submit</button>
+    <canvas id="canvas" class="d-none"></canvas>
+    <button
+      id="takePictureBtn"
+      type="button"
+      class="btn btn-primary btn-lg px-4 gap-3 mt-2"
+    >
+      Capture And Submit
+    </button>
   </div>
-
-</div>  
+</div>
+{% endif %}
 {% endblock %} 
 
-{% block javascript %}  
-<script type="text/javascript" src="https://unpkg.com/webcam-easy/dist/webcam-easy.min.js"></script>
+{% block javascript %}
+<script
+  type="text/javascript"
+  src="{{ url_for('static', filename='js/webcam-easy.min.js')}}"
+></script>
 <script>
+  // Global Variables
   const webcamElement = document.getElementById('webcam');
-  const canvasElement = document.getElementById('canvas');  
-  const webcam = new Webcam(webcamElement, 'user', canvasElement);  
+  const canvasElement = document.getElementById('canvas');
+  const classID = document.getElementById('class_id');
+  const webcam = new Webcam(webcamElement, 'user', canvasElement);
 
+  // Start webcam
   webcam.start()
-   .then(result =>{
+    .then(result => {
       console.log("webcam started");
-   })
-   .catch(err => {
-       console.log(err);
-   });  
+    })
+    .catch(err => {
+      console.log(err);
+    });
 
-  document.querySelector("#takePicture").addEventListener('click',()=>{
+  document.querySelector("#takePictureBtn").addEventListener('click', () => {
+    // Take Picture and store the base64 in variable
     let picture = webcam.snap();    
+    const classIDVal = classID.value;    
+    const newUrl = `${window.origin}/faceauth`;
+    const data = { picture, classIDVal };
 
-    newUrl = `${window.origin}/faceauth`;    
+    // Send picture to server and check if the same person
+    async function checkSamePerson() {
+      // Default options are marked with *
+      const response = await fetch(newUrl, {
+        method: "POST", // *GET, POST, PUT, DELETE, etc.          
+        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data), // body data type must match "Content-Type" header
+      });
 
-    const data = {picture};
+      const parsedResponse = await response.json(); // parses JSON response into native JavaScript objects
+      const { isSamePerson, classData } = parsedResponse;            
 
-    console.log(data)
-    postData(newUrl, data).then((response) => {    
-    if (response.data != true) {      
-      console.log(response.data)
-      alert(response.data)
-      // flash(`server says : ${response.data}`,"success")
-    } else {
-      // flash(`server says : ${response.data}`,"danger")
-      return
+      if (isSamePerson == "True") {
+        // flash(`Authorized`, "success")
+        // Stop And hide camera
+        webcam.stop()
+        webcamElement.style.display = "None"
+        canvasElement.style.display = "None"
+        document.querySelector("#takePictureBtn").style.display = "None"
+
+        // Get Location Info
+        function getLocation() {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition);
+          } else {
+            flash("Geolocation is not supported by this browser., Please Allow Location Access and make sure to use Google Chrome", "danger");
+          }
+        }
+
+        // Get exact location and use the info for validating location
+        function showPosition(position) {
+          const lat = position.coords.latitude
+          const long = position.coords.longitude          
+
+          if(lat == classData.loc_lat && long == classData.loc_lang){
+            const urlTakeAttendance = `${window.origin}/takeattendance/${classData.id}`;            
+            async function takeAttendance() {              
+              const response = await fetch(urlTakeAttendance,{method: "POST"});              
+              const data = await response.json()
+              if(data.response == "Success"){
+                flash("Attendance Taken Successfully", "success")
+              }else{
+                flash(data.response, "danger")                
+              }
+            }            
+
+            // Trigger The function
+            takeAttendance()
+
+          }else{
+            console.log("Not Same Location")
+          }                              
+        }
+
+        // Trigger the function
+        getLocation()
+
+      } else if (isSamePerson == "False") { 
+        //If Not the same person try again
+        flash(`Not Authorized, make sure your face is close to the camera`, "danger")
+        return
+      }
+
     }
-    }); 
-  
-  });
-    
-  // $('#cameraFlip').click(function() {
-  //   webcam.flip();
-  //   webcam.start();  
-  // });  
-</script>
-{% endblock %} 
 
+    // When Capture and submit button Clicked Trigger this function
+    checkSamePerson();
+
+
+  });
+
+</script>
+{% endblock %}

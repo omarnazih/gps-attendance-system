@@ -1,4 +1,4 @@
-// Example POST method implementation:
+//POST method implementation:
 async function postData(url = "", data = {}) {
   // Default options are marked with *
   const response = await fetch(url, {
@@ -20,9 +20,11 @@ async function postData(url = "", data = {}) {
 function flash(message, category) {
   const messagesContainer = document.getElementById("messages-container");
   messagesContainer.innerHTML = `
-  <div class="alert ${category} alert-dismissible fade show" role="alert">
+  <div class="alert alert-${category} alert-dismissible fade show" style="margin-top:5rem;" role="alert">
     ${message}
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
   `;
 }
+
+    

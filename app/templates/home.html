@@ -13,10 +13,11 @@
 {% endblock %} 
 
 {% block classList %}
- <div class="row">
-  {{draw_card('img/firstclass.jpg', "Class one", "This is some text", "1")}}
-  {{draw_card('img/firstclass.jpg', "Class two", "This some text to desc", "1")}}
-  {{draw_card('img/firstclass.jpg', "Class three", "This some text to desc", "1")}}
-  {{draw_card('img/firstclass.jpg', "Class four", "This some text to desc", "1")}}
- </div>
+ {% if classData %}
+  <div class="row">
+    {% for class in classData %}
+      {{draw_card('img/firstclass.jpg', class.name, class.description, class.id)}}
+    {% endfor %}  
+  </div>
+ {% endif %}
 {% endblock %}

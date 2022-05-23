@@ -18,7 +18,6 @@ app.config['IMAGES_FOLDER']='app/images/'
 app.config['TEMPLATES']='app/templates/'
 app.config['UPLOAD_IMAGE']='app/static/img/'
 app.config['MAX_CONTENT_PATH']=5*1024*1024
-# app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 app.config['MYSQL_USER'] = 'atsys'
 app.config['MYSQL_PASSWORD'] = 'atsys'

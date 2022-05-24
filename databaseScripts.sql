@@ -8,14 +8,30 @@ CREATE TABLE `system_users` (
   `pwd` varchar(255) NOT NULL,
   `email` varchar(255) DEFAULT NULL,
   `admin` char(1) DEFAULT 'N',
+  `student` char(1) DEFAULT 'N',
+  `teacher` char(1) DEFAULT 'N',
   `notes` varchar(255) DEFAULT NULL,  
   `last_active_date` datetime DEFAULT NULL,
   PRIMARY KEY (`ID`),  
   -- CONSTRAINT `company_users_brn_fk` FOREIGN KEY (`BRN_ID`) REFERENCES `company_branches` (`id`),
-  CONSTRAINT `company_users_admin_ck` CHECK ((`admin` in ('N','Y')))
+  CONSTRAINT `system_users_admin_ck` CHECK ((`admin` in ('N','Y'))),
+  CONSTRAINT `system_users_student_ck` CHECK ((`admin` in ('N','Y'))),
+  CONSTRAINT `system_users_teacher_ck` CHECK ((`admin` in ('N','Y')))
 );
+ 
+-- alter table system_users
+-- add `student` char(1) DEFAULT 'N';
 
-insert into system_users values ( 1, 'admin', '123', 'admin@gmail.com', 'Y', null, null);
+-- alter table system_users
+-- add `teacher` char(1) DEFAULT 'N';
+
+-- alter table system_users
+-- add CONSTRAINT `system_users_student_ck` CHECK ((`admin` in ('N','Y')));
+
+-- alter table system_users
+-- add CONSTRAINT `system_users_teacher_ck` CHECK ((`admin` in ('N','Y')));
+
+insert into system_users values ( 1, 'admin', '123', 'admin@gmail.com', 'Y', 'N', 'N', null, null);
 
 -- Date : 23-05-22
 create table majors(

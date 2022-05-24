@@ -113,8 +113,11 @@
         function showPosition(position) {
           const lat = position.coords.latitude
           const long = position.coords.longitude          
-
-          if(lat == classData.loc_lat && long == classData.loc_lang){
+          
+          console.log(`DB Lat : ${classData.loc_lat}, Lat : ${classData.loc_lang}`)
+          console.log(`Client Lat : ${lat}, Lat : ${long}`)
+          
+          if(Math.abs(lat - classData.loc_lat) < 1 && Math.abs(long - classData.loc_lang) < 1){
             const urlTakeAttendance = `${window.origin}/takeattendance/${classData.id}`;            
             async function takeAttendance() {              
               const response = await fetch(urlTakeAttendance,{method: "POST"});              
@@ -130,7 +133,9 @@
             takeAttendance()
 
           }else{
+            flash("Not Same Location, Attendance Is not Taken", "danger")
             console.log("Not Same Location")
+            return
           }                              
         }
 

@@ -1,0 +1,127 @@
+{% extends 'base.html' %} 
+{% from "includes/_macros.html" import delBtn, addRowBtn, comboBox %}
+
+{% block title %} {{title}} {% endblock %} 
+
+{% block css %} 
+{% endblock %} 
+
+{% macro header(text) %}
+  <h1 >{{text}}</h1>
+{% endmacro %}
+
+{% block content %}
+
+{{header("Edit Classes")}}   
+
+{{addRowBtn()}}
+<div class="row">
+  <form action="{{ url_for('save_class') }}" method="POST" enctype="multipart/form-data">
+    <div class="col-md-12">
+      <table class="table table-bordered" id="editableTable">
+        <thead>
+          <tr class="bg-secondary text-light">
+            <th width="6%">sn</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Desc.</th>
+            <th>Location Lat.</th>
+            <th>Location Long.</th>
+            <th>Major</th>
+            <th>Year</th>
+            <th width="2%">Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if classData %}
+          {% for row in classData %}
+          <tr>
+            <td>
+              <input class="form-control" type="text" id="sn" readonly="true" value="{{row.row_num}}">
+            </td>
+            <td>
+              <input type="hidden" name="id" value="{{row.id}}">
+              <input class="form-control" type="text" name="code" id="code" value="{{row.code}}" required>
+            </td>
+            <td>
+              <input class="form-control" type="text" name="name" id="name" value="{{row.name}}" required>
+            </td>
+            <td>
+              <input class="form-control" type="text" name="desc" id="desc" value="{{row.description}}">
+            </td>
+            <td>
+              <input class="form-control" type="text" name="lat" id="lat" value="{{row.loc_lat}}">
+            </td>
+            <td>
+              <input class="form-control" type="text" name="lang" id="lang" value="{{row.loc_lang}}">
+            </td>
+            <td>
+              {{comboBox('major', majorsCombo, row.major_id)}}
+            </td>
+            <td>
+              {{comboBox('year', yearsCombo, row.year_id)}}
+            </td>
+
+            <td style="text-align: center;">
+              <a class="button button-small edit" href="{{url_for('delete_class', classID=row.id)}}" title="Delete"
+                onclick="delRecord(this)">
+                <i class="fa fa-trash fa-lg"></i>
+              </a>
+            </td>
+
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr>
+            <td>
+              <input class="form-control" type="text" id="sn" readonly="true" value="1">
+            </td>
+            <td>
+              <input type="hidden" name="id" value="">
+              <input class="form-control" type="text" name="code" id="code" value="" required>
+            </td>
+            <td>
+              <input class="form-control" type="text" name="name" id="name" value="" required>
+            </td>
+            <td>
+              <input class="form-control" type="text" name="desc" id="desc" value="">
+            </td>
+            <td>
+              <input class="form-control" type="text" name="lat" id="lat" value="">
+            </td>
+            <td>
+              <input class="form-control" type="text" name="lang" id="lang" value="">
+            </td>
+            <td>
+              {{comboBox('major', majorsCombo, '')}}
+            </td>
+            <td>
+              {{comboBox('year', yearsCombo, '')}}
+            </td>            
+
+            {{delBtn("")}}
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+      <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
+  </form>
+</div>
+
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
+<script>
+// Add New Record
+const addRowBtn = document.querySelector(".add-row");
+addRowBtn.addEventListener('click', addNewRecord);
+function addNewRecord() {
+  let sn = document.querySelectorAll('#sn');  
+  const table = document.querySelector("#editableTable");
+  
+  $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td> <input type="hidden" name="id" value=""> <input class="form-control" type="text" name="code" id="code" value="" required=""> </td><td> <input class="form-control" type="text" name="name" id="name" value="" required=""> </td><td> <input class="form-control" type="text" name="desc" id="desc" value=""> </td><td> <input class="form-control" type="text" name="lat" id="lat" value=""> </td><td> <input class="form-control" type="text" name="lang" id="lang" value=""> </td><td> <select class="form-select form-select-sm" name="major" id="major"> <option value="" selected=""></option></select> </td><td> <select class="form-select form-select-sm" name="year" id="year"> <option value="" selected=""></option> </select> </td><td style="text-align: center;"> <a class="button button-small edit" href="" title="Delete" onclick="delRecord(this)"> <i class="fa fa-trash fa-lg"></i> </a> </td></tr>`);  
+}  
+</script>
+{% endblock %}

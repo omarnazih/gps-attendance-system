@@ -1,13 +1,41 @@
 {% macro draw_card(imageUrl, title, description, classID) %}
-<div class="col-sm-3">
+<div class="col-sm-3" style="margin-bottom: 2rem;">
   <div class="card" style="width: 18rem;">
     <img src="{{url_for('static', filename=imageUrl)}}"  class="card-img-top" alt="...">
     <div class="card-body">
       <h5 class="card-title">{{title}}</h5>
       <p class="card-text">{{description}}</p>
-      <a href="{{ url_for('take_attendance', classID=classID) }}" class="btn btn-primary">Go</a>
+      <a href="{{ url_for('take_attendance', classID=classID) }}" class="btn btn-primary">Take Attendance</a>
     </div>
   </div>
 </div>
 {% endmacro %}
 
+{% macro comboBox(name, cursor, value) %}
+<select class="form-select form-select-sm" name="{{name}}" id="{{name}}">  
+  {% for item in cursor %}
+    {% if item.id == value %}
+      <option value="{{item.id}}" selected>{{item.name}}</option>        
+    {% else %}  
+      <option value="{{item.id}}">{{item.name}}</option>
+    {% endif %}      
+  {% endfor %}  
+</select>
+{% endmacro %}
+
+{% macro addRowBtn() %}
+<div class="row">
+  <div class="col-md-12">      
+    <a class="btn btn-default pull-right add-row text-light bg-secondary bg-gradient" 
+    ><i class="fa fa-plus"></i>&nbsp;&nbsp; Add Row</a>
+  </div>
+</div>  
+{% endmacro %}
+
+{% macro delBtn(href) %}
+<td style="text-align: center;">
+  <a class="button button-small edit" {{href}} title="Delete" onclick="delRecord(this)">
+    <i class="fa fa-trash fa-lg"></i>
+  </a>
+</td>
+{% endmacro %}

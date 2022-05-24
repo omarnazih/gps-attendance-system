@@ -6,6 +6,11 @@ from functools import wraps
 from app.facialauth import checkSamePerson
 import datetime
 
+def ifEmpty(var, val):
+  if var == '':
+    return val
+  return var
+
 # Check if user logged in
 def is_logged_in(f):
     @wraps(f)
@@ -50,6 +55,9 @@ def login():
       if len(result) > 0 :             
          password = result[0]['pwd']         
          user_id = result[0]['id']
+         is_admin = result[0]['admin']
+         is_student = result[0]['student']
+         is_teacher = result[0]['teacher']         
          
          # Compare Passwords     
          # if bcrypt.check_password_hash(password, password_candidate):            
@@ -57,7 +65,10 @@ def login():
          if password_candidate == password :   
             session['logged_in'] = True
             session['username'] = username
-            session['user_id'] = user_id                                 
+            session['user_id'] = user_id 
+            session['is_admin'] = is_admin                                
+            session['is_student'] = is_student                                
+            session['is_teacher'] = is_teacher                                
             return redirect(url_for('home_page'))               
          else :            
             flash("Invalid Login", 'alert-danger')                  
@@ -78,12 +89,124 @@ def logout():
 def classes():    
    # Create cursor
    cur = db.connection.cursor() 
-   
+
    # Get System Users
-   result = cur.execute("select * from classes")
+   cur.execute("SET @row_number = 0;")               
+   result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, classes.* from classes")
    classData = cur.fetchall()   
 
-   return render_template('classes.html', title = "Classes", classData = classData)
+   result = cur.execute("select id, name from years")
+   yearsCombo = cur.fetchall()      
+
+   result = cur.execute("select id, name from majors")
+   majorsCombo = cur.fetchall()      
+
+   return render_template('classes.html', title = "Classes", classData = classData, yearsCombo= yearsCombo, majorsCombo=majorsCombo )
+
+@app.route('/del_class/<int:classID>')
+@is_logged_in
+def delete_class(classID):    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   sql = f"delete from attendance where class_id = {classID}"
+   cur.execute(sql)
+   db.connection.commit()        
+
+   sql = f"delete from students where class_id = {classID}"
+   cur.execute(sql)
+   db.connection.commit()        
+
+   sql = f"delete from classes where id = {classID}"
+   cur.execute(sql)
+   db.connection.commit()        
+
+   sql = f"select * from classes"
+   classData = cur.execute(sql)
+      
+   return redirect(url_for('classes'))     
+
+@app.route('/save_class', methods=['GET', 'POST'])
+@is_logged_in
+def save_class():    
+   # Create cursor
+   cur = db.connection.cursor()      
+
+   #Storing Data into variables
+   id = request.form.getlist('id')
+   code = request.form.getlist('code')    
+   name = request.form.getlist('name')  
+   desc = request.form.getlist('desc')  
+   lat = request.form.getlist('lat')  
+   lang = request.form.getlist('lang')  
+   major = request.form.getlist('major') 
+   year = request.form.getlist('year') 
+
+   #Getting lenght of a required value list
+   listLength = len(id)
+
+   if listLength > 1:         
+      for x in range (0, listLength):  
+         if id[x] == '':
+            cur.execute("select IFNULL(max(id),0)+1 as id from classes")
+            res = cur.fetchone()        
+            id = res['id']                        
+
+            sql = f"""
+                  insert into classes (id, code, name, description, loc_lat, loc_lang, major_id, year_id)
+                  values ({id}, '{code[x]}' , '{name[x]}', '{desc[x]}', {lat[x]}, {lang[x]}, {ifEmpty(major[x], 'null')}, {ifEmpty(year[x], 'null')});      
+                  """               
+         else:
+            sql = f"""
+                  update 
+                     classes
+                  set 
+                      code = '{code[x]}',
+                      name = '{name[x]}',
+                      description = '{desc[x]}',
+                      loc_lat = {lat[x]},
+                      loc_lang = {lang[x]},
+                      major_id = {major[x]},
+                      year_id = {year[x]}
+                  where 
+                     id = {id[x]};      
+                  """                   
+         result = cur.execute(sql)      
+         db.connection.commit()    
+      # FeedBack
+      flash('Data Updated Successfully', 'alert-success')                                                                               
+   elif listLength == 1 :                         
+      #If Id is null insert new user
+      if id[0] == '':
+         cur.execute("select IFNULL(max(id),0)+1 as id from classes")
+         res = cur.fetchone()        
+         id = res['id']                     
+         sql = f"""
+               insert into classes (id, code, name, description, loc_lat, loc_lang, major_id, year_id)
+               values ({id}, '{code[0]}' , '{name[0]}', '{desc[0]}', {lat[0]}, {lang[0]}, {ifEmpty(major[0], 'null')}, {isEmpty(year[0], 'null')});      
+               """             
+      else :   
+            sql = f"""
+                  update 
+                     classes
+                  set 
+                      code = '{code[0]}', 
+                      name = '{name[0]}',
+                      description ='{desc[0]}',
+                      loc_lat = {lat[0]},
+                      loc_lang = {lang[0]},
+                      major_id = {major[0]},
+                      year_id = {year[0]}                      
+                  where 
+                     id = {id[0]};
+                  """        
+      result = cur.execute(sql)      
+      db.connection.commit()          
+      flash('Data Updated Successfully', 'alert-success')                     
+   else :    
+      flash('Please Add At least one record before saving ', 'alert-info') 
+
+   return redirect(url_for('classes'))     
 
 @app.route('/takeattendance/<string:classID>', methods=['GET', 'POST'])
 @is_logged_in
@@ -100,7 +223,7 @@ def take_attendance(classID):
 
       return render_template('take_attendance.html', title = "Take Attendance", classData = classData)
 
-   elif request.method == 'POST':
+   elif request.method == 'POST' and session['is_student'] == 'Y' :
       CurrentDate=datetime.date.today()  
       
       cur.execute("select id from students where user_id = {}".format(session['user_id']))
@@ -128,6 +251,8 @@ def take_attendance(classID):
          
       else :   
          return jsonify(response="Attendance Taken Before")                  
+   else :
+      return jsonify(response="Something went wrong!!")                        
 
 @app.route('/faceauth', methods=['GET', 'POST'])
 @is_logged_in

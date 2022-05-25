@@ -65,13 +65,16 @@ create table classes (
 create table students (
 	id int not null,    
     code int not null,
-    name varchar(255) not null,
+    name varchar(255) not null,    
     user_id int,
-    class_id int,       
+    major_id int,       
+    year_id int,  
     picture varchar(255) not null,
     primary key (id),
     constraint students_user_id_fk foreign key (user_id) references system_users(id),
-    constraint students_class_id_fk foreign key (class_id) references classes(id)
+    constraint students_major_id_fk foreign key (major_id) references majors(id),
+    constraint students_year_id_fk foreign key (year_id) references years(id),
+    CONSTRAINT students_uq UNIQUE (id,user_id)
 );
 
 create table attendance (

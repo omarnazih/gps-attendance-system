@@ -12,7 +12,7 @@
 {% endmacro %}
 
 {% macro comboBox(name, cursor, value) %}
-<select class="form-select form-select-sm" name="{{name}}" id="{{name}}">  
+<select class="form-select form-select" name="{{name}}" id="{{name}}">  
   {% for item in cursor %}
     {% if item.id == value %}
       <option value="{{item.id}}" selected>{{item.name}}</option>        

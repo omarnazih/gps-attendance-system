@@ -1,6 +1,7 @@
 import os
 import base64
 from app import app, db
+from werkzeug.utils import secure_filename
 from flask import Flask, jsonify,session, render_template, request, redirect, url_for,flash,make_response, Response,send_from_directory
 from functools import wraps
 from app.facialauth import checkSamePerson
@@ -9,6 +10,11 @@ import datetime
 def ifEmpty(var, val):
   if var == '':
     return val
+  return var
+
+def nvl(var):
+  if var == '':
+    return 'null'
   return var
 
 # Check if user logged in
@@ -68,7 +74,13 @@ def login():
             session['user_id'] = user_id 
             session['is_admin'] = is_admin                                
             session['is_student'] = is_student                                
-            session['is_teacher'] = is_teacher                                
+            session['is_teacher'] = is_teacher 
+
+            if session['is_student'] == 'Y':
+               cur.execute(f"select id from students where user_id = {session['user_id']}")
+               res = cur.fetchone()
+               session['student_id'] = res['id']
+
             return redirect(url_for('home_page'))               
          else :            
             flash("Invalid Login", 'alert-danger')                  
@@ -83,6 +95,132 @@ def login():
 def logout():
    session.clear()
    return redirect(url_for('login'))   
+
+@app.route('/students')
+@is_logged_in
+def students():    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   # Get System Users
+   cur.execute("SET @row_number = 0;")               
+   result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, students.* from students")
+   studentData = cur.fetchall()   
+
+   result = cur.execute("select id, name from years")
+   yearsCombo = cur.fetchall()      
+
+   result = cur.execute("select id, name from majors")
+   majorsCombo = cur.fetchall()      
+
+   result = cur.execute("select id, name from system_users")
+   usersCombo = cur.fetchall()
+
+   return render_template('students.html', title = "students", studentData = studentData, yearsCombo= yearsCombo, majorsCombo=majorsCombo, usersCombo=usersCombo )
+
+@app.route('/save_student', methods=['GET', 'POST'])
+@is_logged_in
+def save_student():    
+   # Create cursor
+   cur = db.connection.cursor()      
+
+   #Storing Data into variables
+   id = request.form.getlist('id')
+   code = request.form.getlist('code')    
+   name = request.form.getlist('name')  
+   major = request.form.getlist('major') 
+   year = request.form.getlist('year') 
+   picture = request.files.getlist('picture')  
+   user = request.form.getlist('user') 
+
+   #Getting lenght of a required value list
+   listLength = len(id)
+   
+   if listLength > 1:         
+      for x in range (0, listLength):    
+         print(code[x])     
+         print(major[x])     
+         print(year[x])     
+         print(user[x])     
+               
+         file_name = secure_filename(picture[x].filename);                      
+         # If The path is correct then save      
+         if file_name != '': 
+            absolute_path = os.path.abspath(app.config['IMAGES_FOLDER'] + file_name)               
+            picture[x].save(absolute_path)
+            absolute_path = absolute_path.replace('\\','\\\\')
+         else:
+            absolute_path = 'null'         
+
+         if id[x] == '':
+            cur.execute("select IFNULL(max(id),0)+1 as id from students")
+            res = cur.fetchone()        
+            id = res['id']                        
+
+            sql = f"""
+                  insert into students (id, code, name, major_id, year_id, picture, user_id)
+                  values ({id}, '{code[x]}' , '{ifEmpty(name[x], 'null')}', {ifEmpty(major[x], 'null')}, {ifEmpty(year[x], 'null')}, "{absolute_path}", {ifEmpty(user[x], 'null')});      
+                  """               
+         else:
+            sql = f"""
+                  update 
+                     students
+                  set 
+                      code = '{code[x]}',
+                      name = '{name[x]}',
+                      major_id = '{nvl(major[x])}',
+                      year_id = {nvl(year[x])},
+                      picture = "{absolute_path}",
+                      user_id = {nvl(user[x])}
+                  where 
+                     id = {id[x]};      
+                  """     
+         print(sql)                       
+         result = cur.execute(sql)      
+         db.connection.commit()    
+      # FeedBack
+      flash('Data Updated Successfully', 'alert-success')                                                                               
+   elif listLength == 1 :   
+      file_name = secure_filename(picture[0].filename);             
+      
+      # If The path is correct then save      
+      if file_name != '': 
+         absolute_path = os.path.abspath(app.config['IMAGES_FOLDER'] + file_name)               
+         picture[0].save(absolute_path)
+         absolute_path = absolute_path.replace('\\','\\\\')
+      else:
+         absolute_path = 'null'                                
+      #If Id is null insert new user
+      if id[0] == '':
+         cur.execute("select IFNULL(max(id),0)+1 as id from classes")
+         res = cur.fetchone()        
+         id = res['id']                     
+         sql = f"""
+               insert into students (id, code, name, major_id, year_id, picture, user_id)
+               values ({id}, '{code[0]}' , '{name[0]}', {ifEmpty(major[0], 'null')}, {ifEmpty(year[0], 'null')}, "{absolute_path}", {nvl(user[0])});        
+               """             
+      else :   
+            sql = f"""
+                  update 
+                     students
+                  set 
+                      code = '{code[0]}',
+                      name = '{name[0]}',
+                      major_id = '{major[0]}',
+                      year_id = {year[0]},
+                      picture = "{absolute_path}",
+                      user_id = {user[0]}
+                  where 
+                     id = {id[0]}; 
+                  """    
+      print(sql)                                             
+      result = cur.execute(sql)      
+      db.connection.commit()          
+      flash('Data Updated Successfully', 'alert-success')                     
+   else :    
+      flash('Please Add At least one record before saving ', 'alert-info') 
+
+   return redirect(url_for('students'))
 
 @app.route('/classes')
 @is_logged_in
@@ -101,7 +239,9 @@ def classes():
    result = cur.execute("select id, name from majors")
    majorsCombo = cur.fetchall()      
 
+
    return render_template('classes.html', title = "Classes", classData = classData, yearsCombo= yearsCombo, majorsCombo=majorsCombo )
+
 
 @app.route('/del_class/<int:classID>')
 @is_logged_in
@@ -145,13 +285,13 @@ def save_class():
    #Getting lenght of a required value list
    listLength = len(id)
 
-   if listLength > 1:         
-      for x in range (0, listLength):  
+   if listLength > 1:    
+      for x in range (0, listLength):                                            
          if id[x] == '':
             cur.execute("select IFNULL(max(id),0)+1 as id from classes")
             res = cur.fetchone()        
             id = res['id']                        
-
+            
             sql = f"""
                   insert into classes (id, code, name, description, loc_lat, loc_lang, major_id, year_id)
                   values ({id}, '{code[x]}' , '{name[x]}', '{desc[x]}', {lat[x]}, {lang[x]}, {ifEmpty(major[x], 'null')}, {ifEmpty(year[x], 'null')});      
@@ -175,7 +315,7 @@ def save_class():
          db.connection.commit()    
       # FeedBack
       flash('Data Updated Successfully', 'alert-success')                                                                               
-   elif listLength == 1 :                         
+   elif listLength == 1 :                                                  
       #If Id is null insert new user
       if id[0] == '':
          cur.execute("select IFNULL(max(id),0)+1 as id from classes")
@@ -183,7 +323,7 @@ def save_class():
          id = res['id']                     
          sql = f"""
                insert into classes (id, code, name, description, loc_lat, loc_lang, major_id, year_id)
-               values ({id}, '{code[0]}' , '{name[0]}', '{desc[0]}', {lat[0]}, {lang[0]}, {ifEmpty(major[0], 'null')}, {isEmpty(year[0], 'null')});      
+               values ({id}, '{code[0]}' , '{name[0]}', '{desc[0]}', {lat[0]}, {lang[0]}, {ifEmpty(major[0], 'null')}, {nvl(year[0])});      
                """             
       else :   
             sql = f"""
@@ -257,16 +397,18 @@ def take_attendance(classID):
 @app.route('/faceauth', methods=['GET', 'POST'])
 @is_logged_in
 def face_auth():   
+   # Create cursor
+   cur = db.connection.cursor() 
+
    json = request.get_json();   
    image = json['picture']
    classID = json['classIDVal']
 
-   res = checkSamePerson(app.config['IMAGES_FOLDER']+'/omar.jpg', image, 'Y')
-   
-   # Create cursor
-   cur = db.connection.cursor() 
+   cur.execute(f"select picture from students where id = {session['student_id']}")
+   picPath = cur.fetchone()
 
-   # Get system users
+   res = checkSamePerson(picPath['picture'], image, 'Y')
+      
    sql = "select * from classes where id = '{}';".format(classID)
    result = cur.execute(sql)
    classData = cur.fetchone()  
@@ -275,8 +417,6 @@ def face_auth():
       return jsonify(isSamePerson="True", classData = classData) 
    else :
       return jsonify(isSamePerson="False", classData = classData) 
-
-# absolute_path = os.path.abspath(app.config['UPLOAD_FOLDER'] + secure_filename(f.filename))
 
 
    

@@ -117,7 +117,7 @@
           console.log(`DB Lat : ${classData.loc_lat}, Lat : ${classData.loc_lang}`)
           console.log(`Client Lat : ${lat}, Lat : ${long}`)
           
-          if(Math.abs(lat - classData.loc_lat) < 1 && Math.abs(long - classData.loc_lang) < 1){
+          if(Math.abs(lat - classData.loc_lat) < 5 && Math.abs(long - classData.loc_lang) < 5){
             const urlTakeAttendance = `${window.origin}/takeattendance/${classData.id}`;            
             async function takeAttendance() {              
               const response = await fetch(urlTakeAttendance,{method: "POST"});              

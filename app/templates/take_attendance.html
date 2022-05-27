@@ -76,8 +76,10 @@
     const newUrl = `${window.origin}/faceauth`;
     const data = { picture, classIDVal };
 
-    // Send picture to server and check if the same person
-    async function checkSamePerson() {
+    // checkSamePerson(picture);
+
+ // Send picture to server and check if the same person
+ async function checkSamePerson(picture) {
       // Default options are marked with *
       const response = await fetch(newUrl, {
         method: "POST", // *GET, POST, PUT, DELETE, etc.          
@@ -92,8 +94,7 @@
       const parsedResponse = await response.json(); // parses JSON response into native JavaScript objects
       const { isSamePerson, classData } = parsedResponse;            
 
-      if (isSamePerson == "True") {
-        // flash(`Authorized`, "success")
+      if (isSamePerson == "True") {        
         // Stop And hide camera
         webcam.stop()
         webcamElement.style.display = "None"
@@ -113,11 +114,12 @@
         function showPosition(position) {
           const lat = position.coords.latitude
           const long = position.coords.longitude          
+          const marginError = 5
           
           console.log(`DB Lat : ${classData.loc_lat}, Lat : ${classData.loc_lang}`)
           console.log(`Client Lat : ${lat}, Lat : ${long}`)
           
-          if(Math.abs(lat - classData.loc_lat) < 5 && Math.abs(long - classData.loc_lang) < 5){
+          if(Math.abs(lat - classData.loc_lat) < marginError && Math.abs(long - classData.loc_lang) < marginError){
             const urlTakeAttendance = `${window.origin}/takeattendance/${classData.id}`;            
             async function takeAttendance() {              
               const response = await fetch(urlTakeAttendance,{method: "POST"});              
@@ -149,12 +151,13 @@
       }
 
     }
-
     // When Capture and submit button Clicked Trigger this function
-    checkSamePerson();
+    checkSamePerson();  
 
 
   });
 
+  
+ 
 </script>
 {% endblock %}

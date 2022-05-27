@@ -44,6 +44,7 @@ def checkSamePerson(baseImage, newImage, isBase64='N'):
     facesCurFrame = face_recognition.face_locations(imgS) 
     encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
 
+    # print()
     for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):   
         matches = face_recognition.compare_faces(encodedImage, encodeFace)
         print(matches[0])

@@ -12,53 +12,66 @@
 
 {% block content %}
 
-{{header("Edit Students")}}   
+{{header("Edit users")}}   
 
 {{addRowBtn()}}
+
 <div class="row">
-  <form action="{{ url_for('save_student') }}" method="POST" enctype="multipart/form-data">
+  <form action="{{ url_for('save_users') }}" method="POST" enctype="multipart/form-data">
     <div class="col-md-12">
       <table class="table table-bordered" id="editableTable">
         <thead>
           <tr class="bg-secondary text-light">
-            <th width="6%">sn</th>
-            <th>Code</th>
+            <th width="6%">sn</th>            
             <th>Name</th>
-            <th>Major</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Email</th>
+            <th>User Type</th>            
+            <th>Sch.</th>
             <th>Year</th>
-            <th>Picture</th>            
-            <th>User</th>
+            <th>Picture</th>
+            <th>Notes</th>
             <th width="2%">Delete</th>
           </tr>
         </thead>
         <tbody>
-          {% if studentData %}
-          {% for row in studentData %}
+          {% if usersData %}
+          {% for row in usersData %}
           <tr>
             <td>
               <input class="form-control" type="text" id="sn" readonly="true" value="{{row.row_num}}">
             </td>
             <td>
               <input type="hidden" name="id" value="{{row.id}}">
-              <input class="form-control" type="text" name="code" id="code" value="{{row.code}}" required>
-            </td>
-            <td>
               <input class="form-control" type="text" name="name" id="name" value="{{row.name}}" required>
             </td>
             <td>
-              {{comboBox('major', majorsCombo, row.major_id)}}
+              <input class="form-control" type="text" name="username" id="username" value="{{row.username}}" required>
             </td>
             <td>
-              {{comboBox('year', yearsCombo, row.year_id)}}
+              <input class="form-control" type="password" name="password" id="password" value="{{row.pwd}}" required>
             </td>
+            <td>
+              <input class="form-control" type="email" name="email" id="email" value="{{row.email}}">
+            </td>
+            <td>
+              {{comboBox('usertype', userTypeCombo, row.usertype)}}
+            </td>
+            <td>
+              {{comboBox('sch', schCombo, row.sch_id)}}
+            </td>  
+            <td>
+              {{comboBox('year', yearsCombo, row.year)}}
+            </td>                       
             <td>
               <input class="form-control" id="fileupload" name="picture" type="file" value="{{row.picture}}" />
-            </td>              
+            </td> 
             <td>
-              {{comboBox('user', usersCombo, row.user_id)}}
-            </td>
+              <input class="form-control" type="text" name="notes" id="notes" value="{{row.notes}}">
+            </td>                         
             <td style="text-align: center;">
-              <a class="button button-small edit" href="{{url_for('delete_class', classID=row.id)}}" title="Delete"
+              <a class="button button-small edit" href="{{url_for('del_user', userID=row.id)}}" title="Delete"
                 onclick="delRecord(this)">
                 <i class="fa fa-trash fa-lg"></i>
               </a>
@@ -68,29 +81,38 @@
           {% else %}
           <tr>
             <td>
-              <input class="form-control" type="text" id="sn" readonly="true" value="1">
+              <input class="form-control" type="text" id="sn" readonly="true" value="">
             </td>
             <td>
               <input type="hidden" name="id" value="">
-              <input class="form-control" type="text" name="code" id="code" value="" required>
-            </td>
-            <td>
               <input class="form-control" type="text" name="name" id="name" value="" required>
             </td>
             <td>
-              {{comboBox('major', majorsCombo, '')}}
+              <input class="form-control" type="text" name="username" id="username" value="" required>
             </td>
+            <td>
+              <input class="form-control" type="password" name="password" id="password" value="" required>
+            </td>
+            <td>
+              <input class="form-control" type="email" name="email" id="email" value="" required>
+            </td>
+            <td>
+              {{comboBox('usertype', userTypeCombo, '')}}
+            </td>
+            <td>
+              {{comboBox('sch', schCombo, '')}}
+            </td>   
             <td>
               {{comboBox('year', yearsCombo, '')}}
-            </td>
+            </td>                        
             <td>
-              <input class="form-control" id="fileupload" name="picture" type="file" required/>              
-            </td>            
+              <input class="form-control" id="fileupload" name="picture" type="file" value="" />
+            </td>  
             <td>
-              {{comboBox('user', usersCombo, '')}}
-            </td>         
+              <input class="form-control" type="text" name="notes" id="notes" value="{{row.notes}}">
+            </td>                         
             {{delBtn("")}}
-          </tr>
+          </tr>                            
           {% endif %}
         </tbody>
       </table>

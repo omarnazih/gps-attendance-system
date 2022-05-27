@@ -114,10 +114,10 @@
         function showPosition(position) {
           const lat = position.coords.latitude
           const long = position.coords.longitude          
-          const marginError = 5
+          const marginError = 2
           
-          console.log(`DB Lat : ${classData.loc_lat}, Lat : ${classData.loc_lang}`)
-          console.log(`Client Lat : ${lat}, Lat : ${long}`)
+          console.log(`DB Lat : ${classData.loc_lat}, long : ${classData.loc_lang}`)
+          console.log(`Client Lat : ${lat}, long : ${long}`)
           
           if(Math.abs(lat - classData.loc_lat) < marginError && Math.abs(long - classData.loc_lang) < marginError){
             const urlTakeAttendance = `${window.origin}/takeattendance/${classData.id}`;            

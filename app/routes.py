@@ -54,16 +54,17 @@ def login():
       cur = db.connection.cursor() 
 
       # Get system users
-      sql = "select * from system_users where name = '{}';".format(username)
+      sql = "select * from users where username = '{}';".format(username)
       result = cur.execute(sql)
       result = cur.fetchall()             
             
       if len(result) > 0 :             
          password = result[0]['pwd']         
          user_id = result[0]['id']
-         is_admin = result[0]['admin']
-         is_student = result[0]['student']
-         is_teacher = result[0]['teacher']         
+
+         is_admin = 'Y' if result[0]['usertype'] == 'A' else 'N'          
+         is_student = 'Y' if result[0]['usertype'] == 'S' else 'N'          
+         is_teacher = 'Y' if result[0]['usertype'] == 'T' else 'N'          
          
          # Compare Passwords     
          # if bcrypt.check_password_hash(password, password_candidate):            
@@ -76,17 +77,12 @@ def login():
             session['is_student'] = is_student                                
             session['is_teacher'] = is_teacher 
 
-            if session['is_student'] == 'Y':
-               cur.execute(f"select id from students where user_id = {session['user_id']}")
-               res = cur.fetchone()
-               session['student_id'] = res['id']
-
             return redirect(url_for('home_page'))               
          else :            
             flash("Invalid Login", 'alert-danger')                  
             return render_template('login.html')            
       else :   
-         flash("User Name Not Found", 'alert-danger')                  
+         # flash("User Name Not Found", 'alert-danger')                  
          return render_template('login.html')
       
    return render_template('login.html')
@@ -96,52 +92,48 @@ def logout():
    session.clear()
    return redirect(url_for('login'))   
 
-@app.route('/students')
+@app.route('/users')
 @is_logged_in
-def students():    
+def users():    
    # Create cursor
    cur = db.connection.cursor() 
 
    # Get System Users
    cur.execute("SET @row_number = 0;")               
-   result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, students.* from students")
-   studentData = cur.fetchall()   
+   result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, users.* from users")
+   usersData = cur.fetchall()   
 
-   result = cur.execute("select id, name from years")
-   yearsCombo = cur.fetchall()      
+   userTypeCombo = {'A': 'Admin', 'S':'Student', 'T':'Teacher'}
+   yearsCombo = {1: 'Prep', 2:'Y1', 3:'Y2', 4:'Y3', 5:'Y4'}
+   
+   # [{id:1, name:'Prep'}, {id:2, name:'Y1'}, {id:3, name:'Y2'}, {id:4, name:'Y3'}, {id:5, name:'Y4'}]
 
-   result = cur.execute("select id, name from majors")
-   majorsCombo = cur.fetchall()      
+   result = cur.execute("select id, id as name from schedule")
+   schData = cur.fetchall() 
 
-   result = cur.execute("select id, name from system_users")
-   usersCombo = cur.fetchall()
+   return render_template('users.html', title = "users", usersData = usersData, userTypeCombo= userTypeCombo, schData=schData, yearsCombo=yearsCombo)
 
-   return render_template('students.html', title = "students", studentData = studentData, yearsCombo= yearsCombo, majorsCombo=majorsCombo, usersCombo=usersCombo )
-
-@app.route('/save_student', methods=['GET', 'POST'])
+@app.route('/save_users', methods=['GET', 'POST'])
 @is_logged_in
-def save_student():    
+def save_users():    
    # Create cursor
    cur = db.connection.cursor()      
 
    #Storing Data into variables
    id = request.form.getlist('id')
-   code = request.form.getlist('code')    
-   name = request.form.getlist('name')  
-   major = request.form.getlist('major') 
-   year = request.form.getlist('year') 
-   picture = request.files.getlist('picture')  
-   user = request.form.getlist('user') 
+   name = request.form.getlist('name')    
+   username = request.form.getlist('username')  
+   password = request.form.getlist('password') 
+   email = request.form.getlist('email') 
+   usertype = request.files.getlist('usertype')  
+   schedule = request.form.getlist('sch') 
+   picture = request.files.getlist('pciture') 
 
    #Getting lenght of a required value list
    listLength = len(id)
    
    if listLength > 1:         
-      for x in range (0, listLength):    
-         print(code[x])     
-         print(major[x])     
-         print(year[x])     
-         print(user[x])     
+      for x in range (0, listLength):       
                
          file_name = secure_filename(picture[x].filename);                      
          # If The path is correct then save      
@@ -158,20 +150,23 @@ def save_student():
             id = res['id']                        
 
             sql = f"""
-                  insert into students (id, code, name, major_id, year_id, picture, user_id)
-                  values ({id}, '{code[x]}' , '{ifEmpty(name[x], 'null')}', {ifEmpty(major[x], 'null')}, {ifEmpty(year[x], 'null')}, "{absolute_path}", {ifEmpty(user[x], 'null')});      
+                  insert into users (id, username, pwd, name, email, notes, sch_id, year, pciture, usertype)
+                  values ({id}, '{username[x]}' , '{password[x]}', '{nvl(name[x])}', '{nvl(email[x])}', '{notes[x]}', {schedule[x]}, {year[x]}, "{absolute_path}");      
                   """               
          else:
             sql = f"""
                   update 
-                     students
+                     users
                   set 
-                      code = '{code[x]}',
+                      username = '{username[x]}',
                       name = '{name[x]}',
-                      major_id = '{nvl(major[x])}',
-                      year_id = {nvl(year[x])},
+                      pwd = '{password[x]}',
+                      email = {nvl(email[x])},
+                      notes = {nvl(notes[x])},
+                      sch_id = {nvl(schedule[x])},
+                      year = {nvl(year[x])},
+                      usertype = {nvl(usertype[x])},
                       picture = "{absolute_path}",
-                      user_id = {nvl(user[x])}
                   where 
                      id = {id[x]};      
                   """     
@@ -196,20 +191,23 @@ def save_student():
          res = cur.fetchone()        
          id = res['id']                     
          sql = f"""
-               insert into students (id, code, name, major_id, year_id, picture, user_id)
-               values ({id}, '{code[0]}' , '{name[0]}', {ifEmpty(major[0], 'null')}, {ifEmpty(year[0], 'null')}, "{absolute_path}", {nvl(user[0])});        
+                  insert into users (id, username, pwd, name, email, notes, sch_id, year, pciture, usertype)
+                  values ({id}, '{username[0]}' , '{password[0]}', '{nvl(name[0])}', '{nvl(email[0])}', '{notes[0]}', {schedule[0]}, {year[0]}, "{absolute_path}");       
                """             
       else :   
             sql = f"""
                   update 
-                     students
+                     users
                   set 
-                      code = '{code[0]}',
+                      username = '{username[0]}',
                       name = '{name[0]}',
-                      major_id = '{major[0]}',
-                      year_id = {year[0]},
+                      pwd = '{password[0]}',
+                      email = {nvl(email[0])},
+                      notes = {nvl(notes[0])},
+                      sch_id = {nvl(schedule[0])},
+                      year = {nvl(year[0])},
+                      usertype = {nvl(usertype[0])},
                       picture = "{absolute_path}",
-                      user_id = {user[0]}
                   where 
                      id = {id[0]}; 
                   """    
@@ -221,6 +219,26 @@ def save_student():
       flash('Please Add At least one record before saving ', 'alert-info') 
 
    return redirect(url_for('students'))
+
+@app.route('/del_user/<int:userID>')
+@is_logged_in
+def del_user(userID):    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   sql = f"delete from users where id = {userID}"
+   cur.execute(sql)
+   db.connection.commit()        
+
+   # sql = f"delete from students where class_id = {classID}"
+   # cur.execute(sql)
+   # db.connection.commit()        
+
+   # sql = f"delete from classes where id = {classID}"
+   # cur.execute(sql)
+   # db.connection.commit()        
+      
+   return redirect(url_for('users'))   
 
 @app.route('/classes')
 @is_logged_in

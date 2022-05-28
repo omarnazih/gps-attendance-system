@@ -104,14 +104,34 @@ def users():
    usersData = cur.fetchall()   
 
    userTypeCombo = {'A': 'Admin', 'S':'Student', 'T':'Teacher'}
-   yearsCombo = {1: 'Prep', 2:'Y1', 3:'Y2', 4:'Y3', 5:'Y4'}
-   
-   # [{id:1, name:'Prep'}, {id:2, name:'Y1'}, {id:3, name:'Y2'}, {id:4, name:'Y3'}, {id:5, name:'Y4'}]
+   yearsCombo = ({'id': 1, 'name': 'Prep'}, {'id': 2, 'name': 'Y1'}, {'id': 3, 'name': 'Y2'}, {'id': 4, 'name': 'Y3'}, {'id': 5, 'name': 'Y4'})    
+      
+   result = cur.execute("select id, id as name from schedule")
+   schData = cur.fetchall()       
 
+   return render_template('users.html', title = "users", usersData = usersData, userTypeCombo= userTypeCombo, schData=schData, yearsCombo=yearsCombo)
+
+
+@app.route('/user_edit', defaults={'user_id':None})
+@app.route('/user_edit/<int:user_id>')
+@is_logged_in
+def user_edit(user_id):    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   usersData = []
+   # Get System Users   
+   if user_id != None :
+      result = cur.execute(f"select users.* from users where id = {user_id}")
+      usersData = cur.fetchall()   
+
+   userTypeCombo = {'A': 'Admin', 'S':'Student', 'T':'Teacher'}
+   yearsCombo = {1: 'Prep', 2:'Y1', 3:'Y2', 4:'Y3', 5:'Y4'}
+      
    result = cur.execute("select id, id as name from schedule")
    schData = cur.fetchall() 
 
-   return render_template('users.html', title = "users", usersData = usersData, userTypeCombo= userTypeCombo, schData=schData, yearsCombo=yearsCombo)
+   return render_template('useredit.html', title = "User Edit", usersData = usersData, userTypeCombo= userTypeCombo, schData=schData, yearsCombo=yearsCombo)
 
 @app.route('/save_users', methods=['GET', 'POST'])
 @is_logged_in
@@ -120,105 +140,71 @@ def save_users():
    cur = db.connection.cursor()      
 
    #Storing Data into variables
-   id = request.form.getlist('id')
-   name = request.form.getlist('name')    
-   username = request.form.getlist('username')  
-   password = request.form.getlist('password') 
-   email = request.form.getlist('email') 
-   usertype = request.files.getlist('usertype')  
-   schedule = request.form.getlist('sch') 
-   picture = request.files.getlist('pciture') 
-
-   #Getting lenght of a required value list
-   listLength = len(id)
+   id = request.form.get('id')
+   name = request.form.get('name')    
+   username = request.form.get('username')  
+   password = request.form.get('password') 
+   email = request.form.get('email') 
+   usertype = request.form.get('usertype')  
+   year = request.form.get('year')  
+   notes = request.form.get('notes')  
+   schedule = request.form.get('sch') 
+   old_pic = request.form.get('old_pic') 
    
-   if listLength > 1:         
-      for x in range (0, listLength):       
-               
-         file_name = secure_filename(picture[x].filename);                      
-         # If The path is correct then save      
-         if file_name != '': 
-            absolute_path = os.path.abspath(app.config['IMAGES_FOLDER'] + file_name)               
-            picture[x].save(absolute_path)
-            absolute_path = absolute_path.replace('\\','\\\\')
-         else:
-            absolute_path = 'null'         
+   picture = request.files.get('picture') 
 
-         if id[x] == '':
-            cur.execute("select IFNULL(max(id),0)+1 as id from students")
-            res = cur.fetchone()        
-            id = res['id']                        
+   print(picture)
+   if picture:
+      file_name = secure_filename(picture.filename);                      
+   else :
+      file_name = ''   
+     
+   # If The path is correct then save      
+   if file_name != '': 
+      absolute_path = os.path.abspath(app.config['IMAGES_FOLDER'] + file_name)               
+      picture.save(absolute_path) 
+      absolute_path = absolute_path.replace('\\','\\\\')
+   elif old_pic != '':
+      absolute_path = old_pic
+      absolute_path = absolute_path.replace('\\','\\\\')
+   else :
+      absolute_path = ''
+   
 
-            sql = f"""
-                  insert into users (id, username, pwd, name, email, notes, sch_id, year, pciture, usertype)
-                  values ({id}, '{username[x]}' , '{password[x]}', '{nvl(name[x])}', '{nvl(email[x])}', '{notes[x]}', {schedule[x]}, {year[x]}, "{absolute_path}");      
-                  """               
-         else:
-            sql = f"""
-                  update 
-                     users
-                  set 
-                      username = '{username[x]}',
-                      name = '{name[x]}',
-                      pwd = '{password[x]}',
-                      email = {nvl(email[x])},
-                      notes = {nvl(notes[x])},
-                      sch_id = {nvl(schedule[x])},
-                      year = {nvl(year[x])},
-                      usertype = {nvl(usertype[x])},
-                      picture = "{absolute_path}",
-                  where 
-                     id = {id[x]};      
-                  """     
-         print(sql)                       
-         result = cur.execute(sql)      
-         db.connection.commit()    
-      # FeedBack
-      flash('Data Updated Successfully', 'alert-success')                                                                               
-   elif listLength == 1 :   
-      file_name = secure_filename(picture[0].filename);             
-      
-      # If The path is correct then save      
-      if file_name != '': 
-         absolute_path = os.path.abspath(app.config['IMAGES_FOLDER'] + file_name)               
-         picture[0].save(absolute_path)
-         absolute_path = absolute_path.replace('\\','\\\\')
-      else:
-         absolute_path = 'null'                                
-      #If Id is null insert new user
-      if id[0] == '':
-         cur.execute("select IFNULL(max(id),0)+1 as id from classes")
-         res = cur.fetchone()        
-         id = res['id']                     
-         sql = f"""
-                  insert into users (id, username, pwd, name, email, notes, sch_id, year, pciture, usertype)
-                  values ({id}, '{username[0]}' , '{password[0]}', '{nvl(name[0])}', '{nvl(email[0])}', '{notes[0]}', {schedule[0]}, {year[0]}, "{absolute_path}");       
-               """             
-      else :   
-            sql = f"""
-                  update 
-                     users
-                  set 
-                      username = '{username[0]}',
-                      name = '{name[0]}',
-                      pwd = '{password[0]}',
-                      email = {nvl(email[0])},
-                      notes = {nvl(notes[0])},
-                      sch_id = {nvl(schedule[0])},
-                      year = {nvl(year[0])},
-                      usertype = {nvl(usertype[0])},
-                      picture = "{absolute_path}",
-                  where 
-                     id = {id[0]}; 
-                  """    
-      print(sql)                                             
-      result = cur.execute(sql)      
-      db.connection.commit()          
-      flash('Data Updated Successfully', 'alert-success')                     
-   else :    
-      flash('Please Add At least one record before saving ', 'alert-info') 
+   if id == '':
+      cur.execute("select IFNULL(max(id),0)+1 as id from users")
+      res = cur.fetchone()        
+      id = res['id']                        
 
-   return redirect(url_for('students'))
+      sql = f"""
+            insert into users (id, username, pwd, name, email, notes, sch_id, year, usertype, picture)
+            values ({id}, '{username}' , '{password}', '{name}', '{email}', '{notes}', {nvl(schedule)}, {nvl(year)}, {nvl(usertype)}, '{absolute_path}');      
+            """               
+   else:
+      sql = f"""
+            update 
+               users
+            set 
+                  username = '{username}',
+                  name = '{name}',
+                  pwd = '{password}',
+                  email = '{email}',
+                  notes = '{notes}',
+                  sch_id = {nvl(schedule)},
+                  year = {nvl(year)},
+                  usertype = {nvl(usertype)},
+                  picture = '{absolute_path}'
+            where 
+               id = {id};      
+            """     
+                        
+   result = cur.execute(sql)      
+   db.connection.commit()    
+
+   # FeedBack    
+   flash('Data Updated Successfully', 'alert-success')                        
+
+   return redirect(url_for('user_edit', user_id=id))
 
 @app.route('/del_user/<int:userID>')
 @is_logged_in
@@ -228,15 +214,9 @@ def del_user(userID):
 
    sql = f"delete from users where id = {userID}"
    cur.execute(sql)
-   db.connection.commit()        
+   db.connection.commit()             
 
-   # sql = f"delete from students where class_id = {classID}"
-   # cur.execute(sql)
-   # db.connection.commit()        
-
-   # sql = f"delete from classes where id = {classID}"
-   # cur.execute(sql)
-   # db.connection.commit()        
+   flash("Data Deleted Successfully", "alert-success")      
       
    return redirect(url_for('users'))   
 
@@ -251,15 +231,12 @@ def classes():
    result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, classes.* from classes")
    classData = cur.fetchall()   
 
-   result = cur.execute("select id, name from years")
-   yearsCombo = cur.fetchall()      
+   yearsCombo = {1: 'Prep', 2:'Y1', 3:'Y2', 4:'Y3', 5:'Y4'}   
 
    result = cur.execute("select id, name from majors")
    majorsCombo = cur.fetchall()      
 
-
    return render_template('classes.html', title = "Classes", classData = classData, yearsCombo= yearsCombo, majorsCombo=majorsCombo )
-
 
 @app.route('/del_class/<int:classID>')
 @is_logged_in
@@ -270,18 +247,15 @@ def delete_class(classID):
    sql = f"delete from attendance where class_id = {classID}"
    cur.execute(sql)
    db.connection.commit()        
-
-   sql = f"delete from students where class_id = {classID}"
-   cur.execute(sql)
-   db.connection.commit()        
-
+     
    sql = f"delete from classes where id = {classID}"
    cur.execute(sql)
    db.connection.commit()        
 
    sql = f"select * from classes"
    classData = cur.execute(sql)
-      
+
+   flash("Data updated Successfully", "alert-success")   
    return redirect(url_for('classes'))     
 
 @app.route('/save_class', methods=['GET', 'POST'])
@@ -294,11 +268,8 @@ def save_class():
    id = request.form.getlist('id')
    code = request.form.getlist('code')    
    name = request.form.getlist('name')  
-   desc = request.form.getlist('desc')  
-   lat = request.form.getlist('lat')  
-   lang = request.form.getlist('lang')  
-   major = request.form.getlist('major') 
-   year = request.form.getlist('year') 
+   desc = request.form.getlist('desc')   
+   major = request.form.getlist('major')    
 
    #Getting lenght of a required value list
    listLength = len(id)
@@ -311,8 +282,8 @@ def save_class():
             id = res['id']                        
             
             sql = f"""
-                  insert into classes (id, code, name, description, loc_lat, loc_lang, major_id, year_id)
-                  values ({id}, '{code[x]}' , '{name[x]}', '{desc[x]}', {lat[x]}, {lang[x]}, {ifEmpty(major[x], 'null')}, {ifEmpty(year[x], 'null')});      
+                  insert into classes (id, code, name, description, major_id)
+                  values ({id}, '{code[x]}' , '{name[x]}', '{desc[x]}', {ifEmpty(major[x], 'null')});      
                   """               
          else:
             sql = f"""
@@ -322,10 +293,7 @@ def save_class():
                       code = '{code[x]}',
                       name = '{name[x]}',
                       description = '{desc[x]}',
-                      loc_lat = {lat[x]},
-                      loc_lang = {lang[x]},
-                      major_id = {major[x]},
-                      year_id = {year[x]}
+                      major_id = {nvl(major[x])}
                   where 
                      id = {id[x]};      
                   """                   
@@ -340,8 +308,8 @@ def save_class():
          res = cur.fetchone()        
          id = res['id']                     
          sql = f"""
-               insert into classes (id, code, name, description, loc_lat, loc_lang, major_id, year_id)
-               values ({id}, '{code[0]}' , '{name[0]}', '{desc[0]}', {lat[0]}, {lang[0]}, {ifEmpty(major[0], 'null')}, {nvl(year[0])});      
+               insert into classes (id, code, name, description, major_id)
+               values ({id}, '{code[0]}' , '{name[0]}', '{desc[0]}', {ifEmpty(major[0], 'null')});      
                """             
       else :   
             sql = f"""
@@ -351,10 +319,7 @@ def save_class():
                       code = '{code[0]}', 
                       name = '{name[0]}',
                       description ='{desc[0]}',
-                      loc_lat = {lat[0]},
-                      loc_lang = {lang[0]},
-                      major_id = {major[0]},
-                      year_id = {year[0]}                      
+                      major_id = {nvl(major[0])}                                  
                   where 
                      id = {id[0]};
                   """        
@@ -364,7 +329,107 @@ def save_class():
    else :    
       flash('Please Add At least one record before saving ', 'alert-info') 
 
-   return redirect(url_for('classes'))     
+   return redirect(url_for('classes'))   
+
+@app.route('/halls')
+@is_logged_in
+def halls():    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   # Get System Users
+   cur.execute("SET @row_number = 0;")               
+   result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, halls.* from halls")
+   hallsData = cur.fetchall()   
+   
+   return render_template('halls.html', title = "Halls", hallsData = hallsData)
+
+
+@app.route('/del_hall/<int:hallID>')
+@is_logged_in
+def delete_hall(hallID):    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   sql = f"delete from halls where id = {hallID}"
+   cur.execute(sql)
+   db.connection.commit()        
+
+   flash("Data updated Successfully", "alert-success")   
+   return redirect(url_for('halls'))     
+
+@app.route('/save_hall', methods=['GET', 'POST'])
+@is_logged_in
+def save_hall():    
+   # Create cursor
+   cur = db.connection.cursor()      
+
+   #Storing Data into variables
+   id = request.form.getlist('id')
+   code = request.form.getlist('code')    
+   name = request.form.getlist('name')     
+   lat = request.form.getlist('lat')  
+   lang = request.form.getlist('lang')  
+
+   #Getting lenght of a required value list
+   listLength = len(id)
+
+   if listLength > 1:    
+      for x in range (0, listLength):                                            
+         if id[x] == '':
+            cur.execute("select IFNULL(max(id),0)+1 as id from halls")
+            res = cur.fetchone()        
+            id = res['id']                        
+            
+            sql = f"""
+                  insert into halls (id, code, name, loc_lat, loc_lang)
+                  values ({id}, '{code[x]}' , '{name[x]}', '{lat[x]}', {lang[x]});      
+                  """               
+         else:
+            sql = f"""
+                  update 
+                     halls
+                  set 
+                      code = '{code[x]}',
+                      name = '{name[x]}',
+                      loc_lat = '{lat[x]}',
+                      loc_lang = '{lang[x]}'                      
+                  where 
+                     id = {id[x]};      
+                  """                   
+         result = cur.execute(sql)      
+         db.connection.commit()    
+      # FeedBack
+      flash('Data Updated Successfully', 'alert-success')                                                                               
+   elif listLength == 1 :                                                  
+      #If Id is null insert new user
+      if id[0] == '':
+         cur.execute("select IFNULL(max(id),0)+1 as id from classes")
+         res = cur.fetchone()        
+         id = res['id']                     
+         sql = f"""
+               insert into halls (id, code, name, loc_lat, loc_lang)
+               values ({id}, '{code[0]}' , '{name[0]}', '{lat[0]}', {lang[0]});      
+               """             
+      else :   
+            sql = f"""
+                  update 
+                     halls
+                  set 
+                      code = '{code[0]}',
+                      name = '{name[0]}',
+                      loc_lat = '{lat[0]}',
+                      loc_lang = '{lang[0]}'                      
+                  where 
+                     id = {id[0]}; 
+                  """        
+      result = cur.execute(sql)      
+      db.connection.commit()          
+      flash('Data Updated Successfully', 'alert-success')                     
+   else :    
+      flash('Please Add At least one record before saving ', 'alert-info') 
+
+   return redirect(url_for('halls'))     
 
 @app.route('/takeattendance/<string:classID>', methods=['GET', 'POST'])
 @is_logged_in

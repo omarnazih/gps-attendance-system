@@ -6,17 +6,17 @@
 {% block css %} 
 {% endblock %} 
 
-{% macro header(text) %}
-  <h1 >{{text}}</h1>
+{% macro header() %}
+  <h1 >Edit {{title}}</h1>
 {% endmacro %}
 
 {% block content %}
 
-{{header("Edit Classes")}}   
+{{header()}}   
 
 {{addRowBtn()}}
 <div class="row">
-  <form action="{{ url_for('save_class') }}" method="POST" enctype="multipart/form-data">
+  <form action="{{ url_for('save_hall') }}" method="POST" enctype="multipart/form-data">
     <div class="col-md-12">
       <table class="table table-bordered" id="editableTable">
         <thead>
@@ -24,14 +24,14 @@
             <th width="6%">sn</th>
             <th>Code</th>
             <th>Name</th>
-            <th>Desc.</th>
-            <th>Major</th>
+            <th>Lat</th>
+            <th>Long</th>
             <th width="2%">Delete</th>
           </tr>
         </thead>
         <tbody>
-          {% if classData %}
-          {% for row in classData %}
+          {% if hallsData %}
+          {% for row in hallsData %}
           <tr>
             <td>
               <input class="form-control" type="text" id="sn" readonly="true" value="{{row.row_num}}">
@@ -44,13 +44,13 @@
               <input class="form-control" type="text" name="name" id="name" value="{{row.name}}" required>
             </td>
             <td>
-              <input class="form-control" type="text" name="desc" id="desc" value="{{row.description}}">
+              <input class="form-control" type="text" name="lat" id="lat" value="{{row.loc_lat}}" required>
             </td>
             <td>
-              {{comboBox('major', majorsCombo, row.major_id)}}
+              <input class="form-control" type="text" name="lang" id="lang" value="{{row.loc_lang}}" required>
             </td>
             <td style="text-align: center;">
-              <a class="button button-small edit" href="{{url_for('delete_class', classID=row.id)}}" title="Delete"
+              <a class="button button-small edit" href="{{url_for('delete_hall', hallID=row.id)}}" title="Delete"
                 onclick="delRecord(this)">
                 <i class="fa fa-trash fa-lg"></i>
               </a>
@@ -71,12 +71,11 @@
               <input class="form-control" type="text" name="name" id="name" value="" required>
             </td>
             <td>
-              <input class="form-control" type="text" name="desc" id="desc" value="">
+              <input class="form-control" type="text" name="lat" id="lat" value="" required>
             </td>
             <td>
-              {{comboBox('major', majorsCombo, '')}}
-            </td>           
-
+              <input class="form-control" type="text" name="long" id="long" value="" required>
+            </td>         
             {{delBtn("")}}
           </tr>
           {% endif %}
@@ -99,7 +98,7 @@ function addNewRecord() {
   let sn = document.querySelectorAll('#sn');  
   const table = document.querySelector("#editableTable");
 
-  $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td> <input type="hidden" name="id" value=""> <input class="form-control" type="text" name="code" id="code" value="" required=""> </td><td> <input class="form-control" type="text" name="name" id="name" value="" required=""> </td><td> <input class="form-control" type="text" name="desc" id="desc" value=""> </td><td> <select class="form-select form-select-sm" name="major" id="major"> <option value="" selected=""></option></select> </td><td style="text-align: center;"> <a class="button button-small edit" href="" title="Delete" onclick="delRecord(this)"> <i class="fa fa-trash fa-lg"></i> </a> </td></tr>`);  
+  $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td> <input type="hidden" name="id" value=""> <input class="form-control" type="text" name="code" id="code" value="" required=""> </td><td> <input class="form-control" type="text" name="name" id="name" value="" required=""> </td><td> <input class="form-control" type="text" name="lat" id="lat" value="" required> </td><td> <input class="form-control" type="text" name="lang" id="lang" value="" required> </td> <td style="text-align: center;"><a class="button button-small edit" href="" title="Delete" onclick="delRecord(this)"> <i class="fa fa-trash fa-lg"></i> </a> </td></tr>`);  
 }  
 </script>
 {% endblock %}

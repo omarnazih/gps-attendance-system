@@ -1,0 +1,143 @@
+{% extends 'base.html' %} 
+{% from "includes/_macros.html" import addRowBtn, comboBox %}
+
+{% block title %} {{title}} {% endblock %} 
+
+{% block css %} 
+{% endblock %} 
+
+{% macro header(text) %}
+  <h1 >{{text}}</h1>
+{% endmacro %}
+
+{% block content %}
+
+{{header("Edit users")}}   
+{% if usersData %}
+{% for row in usersData %}
+<div class="row">
+  <form action="{{ url_for('save_users') }}" method="POST" enctype="multipart/form-data">    
+    <div class="row mb-2">
+      <div class="col-6">
+        <input type="hidden" name="id" value="{{row.id}}">
+        <label class="form-label">Name</label>
+        <input class="form-control" type="text" name="name" id="name" value="{{row.name}}" required>        
+      </div>
+      <div class="col-6">        
+        <label class="form-label">Email</label>
+        <input class="form-control" type="email" name="email" id="email" value="{{row.email}}" required>        
+      </div>
+    </div>  
+
+    <div class="row mb-2">
+      <div class="col-6">        
+        <label class="form-label">Username</label>
+        <input class="form-control" type="text" name="username" id="username" value="{{row.username}}" required>        
+      </div>      
+      <div class="col-6">        
+        <label class="form-label">Password</label>
+        <input class="form-control" type="password" name="password" id="password" value="{{row.pwd}}" required>        
+      </div>
+    </div> 
+
+    <div class="row mb-2">
+      <div class="col-3">        
+        <label class="form-label">Schedule</label>
+        {{comboBox('sch', schData, row.shc_id)}}
+      </div>      
+      <div class="col-3">        
+        <label class="form-label">Year</label>
+        {{comboBox('year', yearsCombo, row.year)}}
+      </div>  
+      <div class="col-6">        
+        <label class="form-label">User Type</label>
+        {{comboBox('usertype', userTypeCombo, row.usertype)}}
+      </div>  
+    </div>  
+
+    <div class="row mb-2">
+      <div class="col-12">
+        <label class="form-label">Picture</label>
+        <input type="hidden" name="old_pic" value="{{row.picture}}">
+        <input class="form-control" id="fileupload" name="picture" type="file" value="" />      
+      </div> 
+    </div>
+
+    <div class="row mb-2">
+      <div class="col-12">
+        <label class="form-label">Notes</label>
+        <input class="form-control" id="notes" name="notes" type="text" value="{{row.notes}}" />      
+      </div> 
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2" id="saveBtn">Save</button>
+  </form>
+</div>
+{% endfor %}
+{% else %}
+<div class="row">
+  <form action="{{ url_for('save_users') }}" method="POST" enctype="multipart/form-data">    
+    <div class="row mb-2">
+      <div class="col-6">
+        <input type="hidden" name="id" value="">
+        <label class="form-label">Name</label>
+        <input class="form-control" type="text" name="name" id="name" value="" required>        
+      </div>
+      <div class="col-6">        
+        <label class="form-label">Email</label>
+        <input class="form-control" type="email" name="email" id="email" value="" required>        
+      </div>
+    </div>  
+
+    <div class="row mb-2">
+      <div class="col-6">        
+        <label class="form-label">Username</label>
+        <input class="form-control" type="text" name="username" id="username" value="" required>        
+      </div>      
+      <div class="col-6">        
+        <label class="form-label">Password</label>
+        <input class="form-control" type="password" name="password" id="password" value="" required>        
+      </div>
+    </div> 
+
+    <div class="row mb-2">
+      <div class="col-3">        
+        <label class="form-label">Schedule</label>
+        {{comboBox('sch', schData, '')}}
+      </div>      
+      <div class="col-3">        
+        <label class="form-label">Year</label>
+        {{comboBox('year', yearsCombo, '')}}
+      </div>  
+      <div class="col-6">        
+        <label class="form-label">User Type</label>
+        {{comboBox('usertype', userTypeCombo, '')}}
+      </div>  
+    </div>  
+
+    <div class="row mb-2">
+      <div class="col-12">
+        <label class="form-label">Picture</label>
+        <input type="hidden" name="old_pic" value="">
+        <input class="form-control" id="fileupload" name="picture" type="file" value="" />      
+      </div> 
+    </div>
+
+    <div class="row mb-2">
+      <div class="col-12">
+        <label class="form-label">Notes</label>
+        <input class="form-control" id="notes" name="notes" type="text" value="" />      
+      </div> 
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2" id="saveBtn">Save</button>
+  </form>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+</script>
+{% endblock %}

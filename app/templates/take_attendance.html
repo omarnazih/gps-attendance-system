@@ -92,7 +92,7 @@
       });
 
       const parsedResponse = await response.json(); // parses JSON response into native JavaScript objects
-      const { isSamePerson, classData } = parsedResponse;            
+      const { isSamePerson, classData, locationData } = parsedResponse;            
 
       if (isSamePerson == "True") {        
         // Stop And hide camera
@@ -116,10 +116,10 @@
           const long = position.coords.longitude          
           const marginError = 2
           
-          console.log(`DB Lat : ${classData.loc_lat}, long : ${classData.loc_lang}`)
+          console.log(`DB Lat : ${locationData.loc_lat}, long : ${locationData.loc_lang}`)
           console.log(`Client Lat : ${lat}, long : ${long}`)
           
-          if(Math.abs(lat - classData.loc_lat) < marginError && Math.abs(long - classData.loc_lang) < marginError){
+          if(Math.abs(lat - locationData.loc_lat) < marginError && Math.abs(long - locationData.loc_lang) < marginError){
             const urlTakeAttendance = `${window.origin}/takeattendance/${classData.id}`;            
             async function takeAttendance() {              
               const response = await fetch(urlTakeAttendance,{method: "POST"});              

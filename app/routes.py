@@ -38,7 +38,7 @@ def home_page():
    cur = db.connection.cursor() 
    
    # Get System Users
-   result = cur.execute("select * from classes")
+   result = cur.execute("select * from modules")
    classData = cur.fetchall()   
 
    return render_template('home.html', title = "home page", classData = classData)
@@ -228,7 +228,7 @@ def classes():
 
    # Get System Users
    cur.execute("SET @row_number = 0;")               
-   result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, classes.* from classes")
+   result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, modules.* from modules")
    classData = cur.fetchall()   
 
    yearsCombo = {1: 'Prep', 2:'Y1', 3:'Y2', 4:'Y3', 5:'Y4'}   
@@ -236,7 +236,7 @@ def classes():
    result = cur.execute("select id, name from majors")
    majorsCombo = cur.fetchall()      
 
-   return render_template('classes.html', title = "Classes", classData = classData, yearsCombo= yearsCombo, majorsCombo=majorsCombo )
+   return render_template('classes.html', title = "Modules", classData = classData, yearsCombo= yearsCombo, majorsCombo=majorsCombo )
 
 @app.route('/del_class/<int:classID>')
 @is_logged_in
@@ -248,11 +248,11 @@ def delete_class(classID):
    cur.execute(sql)
    db.connection.commit()        
      
-   sql = f"delete from classes where id = {classID}"
+   sql = f"delete from modules where id = {classID}"
    cur.execute(sql)
    db.connection.commit()        
 
-   sql = f"select * from classes"
+   sql = f"select * from modules"
    classData = cur.execute(sql)
 
    flash("Data updated Successfully", "alert-success")   
@@ -277,18 +277,18 @@ def save_class():
    if listLength > 1:    
       for x in range (0, listLength):                                            
          if id[x] == '':
-            cur.execute("select IFNULL(max(id),0)+1 as id from classes")
+            cur.execute("select IFNULL(max(id),0)+1 as id from modules")
             res = cur.fetchone()        
             id = res['id']                        
             
             sql = f"""
-                  insert into classes (id, code, name, description, major_id)
+                  insert into modules (id, code, name, description, major_id)
                   values ({id}, '{code[x]}' , '{name[x]}', '{desc[x]}', {ifEmpty(major[x], 'null')});      
                   """               
          else:
             sql = f"""
                   update 
-                     classes
+                     modules
                   set 
                       code = '{code[x]}',
                       name = '{name[x]}',
@@ -304,17 +304,17 @@ def save_class():
    elif listLength == 1 :                                                  
       #If Id is null insert new user
       if id[0] == '':
-         cur.execute("select IFNULL(max(id),0)+1 as id from classes")
+         cur.execute("select IFNULL(max(id),0)+1 as id from modules")
          res = cur.fetchone()        
          id = res['id']                     
          sql = f"""
-               insert into classes (id, code, name, description, major_id)
+               insert into modules (id, code, name, description, major_id)
                values ({id}, '{code[0]}' , '{name[0]}', '{desc[0]}', {ifEmpty(major[0], 'null')});      
                """             
       else :   
             sql = f"""
                   update 
-                     classes
+                     modules
                   set 
                       code = '{code[0]}', 
                       name = '{name[0]}',
@@ -366,7 +366,7 @@ def save_hall():
 
    #Storing Data into variables
    id = request.form.getlist('id')
-   code = request.form.getlist('code')    
+   # code = request.form.getlist('code')    
    name = request.form.getlist('name')     
    lat = request.form.getlist('lat')  
    lang = request.form.getlist('lang')  
@@ -382,15 +382,14 @@ def save_hall():
             id = res['id']                        
             
             sql = f"""
-                  insert into halls (id, code, name, loc_lat, loc_lang)
-                  values ({id}, '{code[x]}' , '{name[x]}', '{lat[x]}', {lang[x]});      
+                  insert into halls (id, name, loc_lat, loc_lang)
+                  values ({id}, '{name[x]}', '{lat[x]}', {lang[x]});      
                   """               
          else:
             sql = f"""
                   update 
                      halls
                   set 
-                      code = '{code[x]}',
                       name = '{name[x]}',
                       loc_lat = '{lat[x]}',
                       loc_lang = '{lang[x]}'                      
@@ -408,15 +407,14 @@ def save_hall():
          res = cur.fetchone()        
          id = res['id']                     
          sql = f"""
-               insert into halls (id, code, name, loc_lat, loc_lang)
-               values ({id}, '{code[0]}' , '{name[0]}', '{lat[0]}', {lang[0]});      
+               insert into halls (id, name, loc_lat, loc_lang)
+               values ({id}, '{name[0]}', '{lat[0]}', {lang[0]});      
                """             
       else :   
             sql = f"""
                   update 
                      halls
-                  set 
-                      code = '{code[0]}',
+                  set                   
                       name = '{name[0]}',
                       loc_lat = '{lat[0]}',
                       loc_lang = '{lang[0]}'                      
@@ -447,25 +445,24 @@ def take_attendance(classID):
       return render_template('take_attendance.html', title = "Take Attendance", classData = classData)
 
    elif request.method == 'POST' and session['is_student'] == 'Y' :
+      print("I'm ")
       CurrentDate=datetime.date.today()  
-      
-      cur.execute("select id from students where user_id = {}".format(session['user_id']))
-      res = cur.fetchone()        
-      student_id = res['id']
+           
+      user_id = session['user_id']
 
       cur.execute("select IFNULL(max(id),0)+1 as id from attendance")
       res = cur.fetchone()        
       attendance_id = res['id']
       
-      cur.execute(f"select 1 as val from attendance where date = '{CurrentDate}' and student_id = {student_id} and class_id= {classID}")
+      cur.execute(f"select 1 as val from attendance where date = '{CurrentDate}' and user_id = {user_id} and class_id= {classID}")
       res = cur.fetchone() 
 
       if res == None:          
          # Insert Data
          sql = """
-               insert into attendance (id, date, student_id, class_id)
+               insert into attendance (id, date, user_id, class_id)
                values ({}, '{}' , {}, {});      
-               """.format(attendance_id, CurrentDate, student_id, classID)
+               """.format(attendance_id, CurrentDate, user_id, classID)
                
          result = cur.execute(sql)      
          db.connection.commit()      
@@ -487,19 +484,24 @@ def face_auth():
    image = json['picture']
    classID = json['classIDVal']
 
-   cur.execute(f"select picture from students where id = {session['student_id']}")
+   cur.execute(f"select picture from users where id = {session['user_id']}")
    picPath = cur.fetchone()
 
    res = checkSamePerson(picPath['picture'], image, 'Y')
       
-   sql = "select * from classes where id = '{}';".format(classID)
+   sql = "select * from modules where id = '{}';".format(classID)
    result = cur.execute(sql)
    classData = cur.fetchone()  
 
+   # sql = "select * from schedule where class_id = '{}' and hall_id={};".format(classID, classID)
+   sql = "select * from halls where id = {};".format(1)
+   result = cur.execute(sql)
+   locationData = cur.fetchone()     
+
    if res == True:
-      return jsonify(isSamePerson="True", classData = classData) 
+      return jsonify(isSamePerson="True", classData = classData, locationData=locationData) 
    else :
-      return jsonify(isSamePerson="False", classData = classData) 
+      return jsonify(isSamePerson="False", classData = classData, locationData=locationData) 
 
 
    

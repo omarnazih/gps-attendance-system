@@ -50,7 +50,7 @@
               {{comboBox('major', majorsCombo, row.major_id)}}
             </td>
             <td style="text-align: center;">
-              <a class="button button-small edit" href="{{url_for('delete_class', classID=row.id)}}" title="Delete"
+              <a class="button button-small edit" id="delBtn" href="{{url_for('delete_class', classID=row.id)}}" title="Delete"
                 onclick="delRecord(this)">
                 <i class="fa fa-trash fa-lg"></i>
               </a>

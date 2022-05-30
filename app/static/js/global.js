@@ -28,11 +28,10 @@ function flash(message, category) {
 }
 
 // Delete Record
-let delRecord = function (obj, event) {
+let delRecord = function (obj) {
   if (confirm("Are you sure you want to delete entire row and all entries attached to it?") == true) {
     $(obj).closest("tr").remove();
   } else {
-    event.preventDefault();
   }
 };
 

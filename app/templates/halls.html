@@ -25,6 +25,7 @@
             <th>Name</th>
             <th>Lat</th>
             <th>Long</th>
+            <th width="2%">Get Location</th>
             <th width="2%">Delete</th>
           </tr>
         </thead>
@@ -46,7 +47,13 @@
               <input class="form-control" type="text" name="lang" id="lang" value="{{row.loc_lang}}" required>
             </td>
             <td style="text-align: center;">
-              <a class="button button-small edit" href="{{url_for('delete_hall', hallID=row.id)}}" title="Delete"
+              <a class="button button-small edit" id="getLoc" title="getLocation"
+                onclick="getLocation(this)">
+                <i class="fa fa-search fa-lg"></i>
+              </a>
+            </td>
+            <td style="text-align: center;">
+              <a class="button button-small edit" id="delBtn" href="{{url_for('delete_hall', hallID=row.id)}}" title="Delete"
                 onclick="delRecord(this)">
                 <i class="fa fa-trash fa-lg"></i>
               </a>
@@ -67,8 +74,14 @@
               <input class="form-control" type="text" name="lat" id="lat" value="" required>
             </td>
             <td>
-              <input class="form-control" type="text" name="long" id="long" value="" required>
-            </td>         
+              <input class="form-control" type="text" name="lang" id="lang" value="" required>
+            </td>   
+            <td style="text-align: center;">
+              <a class="button button-small edit" id="getLoc" title="getLocation"
+                onclick="getLocation(this)">
+                <i class="fa fa-trash fa-lg"></i>
+              </a>
+            </td>                  
             {{delBtn("")}}
           </tr>
           {% endif %}
@@ -93,5 +106,31 @@ function addNewRecord() {
 
   $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td><input class="form-control" type="text" name="name" id="name" value="" required=""> <input type="hidden" name="id" value=""></td><td> <input class="form-control" type="text" name="lat" id="lat" value="" required> </td><td> <input class="form-control" type="text" name="lang" id="lang" value="" required> </td> <td style="text-align: center;"><a class="button button-small edit" href="" title="Delete" onclick="delRecord(this)"> <i class="fa fa-trash fa-lg"></i> </a> </td></tr>`);  
 }  
+
+// Get Location Info
+function getLocation(obj) {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition( function (position) {
+      fillCurrentPosition(obj, position)
+    } );
+  } else {
+    flash("Geolocation is not supported by this browser., Please Allow Location Access and make sure to use Google Chrome", "danger");
+  }
+}
+
+function fillCurrentPosition(obj, position) {
+  const lat = position.coords.latitude
+  const long = position.coords.longitude      
+  
+  console.log(lat)
+  console.log(long)
+
+  const latBox = obj.parentElement.parentElement.querySelector('#lat')
+  const longBox = obj.parentElement.parentElement.querySelector('#lang')
+
+  latBox.value  = lat
+  longBox.value   = long
+  
+}
 </script>
 {% endblock %}

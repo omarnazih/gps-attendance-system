@@ -71,7 +71,7 @@
               </a>
             </td>
             <td style="text-align: center;">
-              <a class="button button-small edit" href="{{url_for('del_user', userID=row.id)}}" title="delete"
+              <a class="button button-small edit" id="delBtn" href="{{url_for('del_user', userID=row.id)}}" title="delete"
               onclick="delRecord(this)">
                 <i class="fa fa-trash fa-lg"></i>
               </a>

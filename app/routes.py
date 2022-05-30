@@ -244,7 +244,7 @@ def delete_class(classID):
    # Create cursor
    cur = db.connection.cursor() 
 
-   sql = f"delete from attendance where class_id = {classID}"
+   sql = f"delete from attendance where module_id = {classID}"
    cur.execute(sql)
    db.connection.commit()        
      
@@ -454,13 +454,13 @@ def take_attendance(classID):
       res = cur.fetchone()        
       attendance_id = res['id']
       
-      cur.execute(f"select 1 as val from attendance where date = '{CurrentDate}' and user_id = {user_id} and class_id= {classID}")
+      cur.execute(f"select 1 as val from attendance where date = '{CurrentDate}' and user_id = {user_id} and module_id= {classID}")
       res = cur.fetchone() 
 
       if res == None:          
          # Insert Data
          sql = """
-               insert into attendance (id, date, user_id, class_id)
+               insert into attendance (id, date, user_id, module_id)
                values ({}, '{}' , {}, {});      
                """.format(attendance_id, CurrentDate, user_id, classID)
                

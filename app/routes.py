@@ -403,7 +403,7 @@ def save_hall():
    elif listLength == 1 :                                                  
       #If Id is null insert new user
       if id[0] == '':
-         cur.execute("select IFNULL(max(id),0)+1 as id from classes")
+         cur.execute("select IFNULL(max(id),0)+1 as id from modules")
          res = cur.fetchone()        
          id = res['id']                     
          sql = f"""
@@ -438,7 +438,7 @@ def take_attendance(classID):
    if request.method == 'GET':
 
       # Get Data
-      sql = "select * from classes where id = '{}';".format(classID)
+      sql = "select * from modules where id = '{}';".format(classID)
       result = cur.execute(sql)
       classData = cur.fetchone()  
 

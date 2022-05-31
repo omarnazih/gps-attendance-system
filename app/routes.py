@@ -38,6 +38,7 @@ def home_page():
    cur = db.connection.cursor() 
    
    # Get System Users
+   #TODO : select modules only in the same daty and time period
    result = cur.execute("select * from modules")
    classData = cur.fetchall()   
 
@@ -101,15 +102,12 @@ def users():
    # Get System Users
    cur.execute("SET @row_number = 0;")               
    result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, users.* from users")
-   usersData = cur.fetchall()   
-
-   userTypeCombo = {'A': 'Admin', 'S':'Student', 'T':'Teacher'}
-   yearsCombo = ({'id': 1, 'name': 'Prep'}, {'id': 2, 'name': 'Y1'}, {'id': 3, 'name': 'Y2'}, {'id': 4, 'name': 'Y3'}, {'id': 5, 'name': 'Y4'})    
+   usersData = cur.fetchall()       
       
    result = cur.execute("select id, id as name from schedule")
    schData = cur.fetchall()       
 
-   return render_template('users.html', title = "users", usersData = usersData, userTypeCombo= userTypeCombo, schData=schData, yearsCombo=yearsCombo)
+   return render_template('users.html', title = "users", usersData = usersData, schData=schData)
 
 
 @app.route('/user_edit', defaults={'user_id':None})
@@ -125,8 +123,8 @@ def user_edit(user_id):
       result = cur.execute(f"select users.* from users where id = {user_id}")
       usersData = cur.fetchall()   
 
-   userTypeCombo = {'A': 'Admin', 'S':'Student', 'T':'Teacher'}
-   yearsCombo = {1: 'Prep', 2:'Y1', 3:'Y2', 4:'Y3', 5:'Y4'}
+   userTypeCombo = ({'id': 'A', 'name': 'Admin'}, {'id': 'S', 'name': 'Student'}, {'id': 'T', 'name': 'Teaching staff'})
+   yearsCombo = ({'id': 1, 'name': 'Prep'}, {'id': 2, 'name': 'Y1'}, {'id': 3, 'name': 'Y2'}, {'id': 4, 'name': 'Y3'}, {'id': 5, 'name': 'Y4'}) 
       
    result = cur.execute("select id, id as name from schedule")
    schData = cur.fetchall() 
@@ -178,7 +176,7 @@ def save_users():
 
       sql = f"""
             insert into users (id, username, pwd, name, email, notes, sch_id, year, usertype, picture)
-            values ({id}, '{username}' , '{password}', '{name}', '{email}', '{notes}', {nvl(schedule)}, {nvl(year)}, {nvl(usertype)}, '{absolute_path}');      
+            values ({id}, '{username}' , '{password}', '{name}', '{email}', '{notes}', {nvl(schedule)}, {nvl(year)}, '{nvl(usertype)}', '{absolute_path}');      
             """               
    else:
       sql = f"""
@@ -192,7 +190,7 @@ def save_users():
                   notes = '{notes}',
                   sch_id = {nvl(schedule)},
                   year = {nvl(year)},
-                  usertype = {nvl(usertype)},
+                  usertype = '{nvl(usertype)}',
                   picture = '{absolute_path}'
             where 
                id = {id};      
@@ -236,7 +234,7 @@ def classes():
    result = cur.execute("select id, name from majors")
    majorsCombo = cur.fetchall()      
 
-   return render_template('classes.html', title = "Modules", classData = classData, yearsCombo= yearsCombo, majorsCombo=majorsCombo )
+   return render_template('classes.html', title = "Modules", classData = classData, majorsCombo=majorsCombo )
 
 @app.route('/del_class/<int:classID>')
 @is_logged_in
@@ -351,6 +349,18 @@ def delete_hall(hallID):
    # Create cursor
    cur = db.connection.cursor() 
 
+   cur.execute(f"select id from schedule where hall_id = {hallID}")
+   res = cur.fetchone()        
+   sch_id = res['id']  
+
+   sql = f"delete from users where sch_id = {sch_id}"
+   cur.execute(sql)
+   db.connection.commit()  
+
+   sql = f"delete from schedule where hall_id = {hallID}"
+   cur.execute(sql)
+   db.connection.commit()        
+
    sql = f"delete from halls where id = {hallID}"
    cur.execute(sql)
    db.connection.commit()        
@@ -444,8 +454,7 @@ def take_attendance(classID):
 
       return render_template('take_attendance.html', title = "Take Attendance", classData = classData)
 
-   elif request.method == 'POST' and session['is_student'] == 'Y' :
-      print("I'm ")
+   elif request.method == 'POST' and session['is_student'] == 'Y' :      
       CurrentDate=datetime.date.today()  
            
       user_id = session['user_id']
@@ -494,6 +503,7 @@ def face_auth():
    classData = cur.fetchone()  
 
    # sql = "select * from schedule where class_id = '{}' and hall_id={};".format(classID, classID)
+   # TODO Replace the one in format below with real hall_id
    sql = "select * from halls where id = {};".format(1)
    result = cur.execute(sql)
    locationData = cur.fetchone()     

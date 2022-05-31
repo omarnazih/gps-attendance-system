@@ -7,14 +7,13 @@
 {% endblock %} 
 
 {% macro header(text) %}
-  <h1 >{{text}}</h1>
+  
 {% endmacro %}
 
 {% block content %}
-
-{{header("Edit users")}}   
 {% if usersData %}
 {% for row in usersData %}
+<h1 style=" text-transform: capitalize;">Edit user <u>{{row.name}}</u></h1>
 <div class="row">
   <form action="{{ url_for('save_users') }}" method="POST" enctype="multipart/form-data">    
     <div class="row mb-2">
@@ -75,6 +74,7 @@
 </div>
 {% endfor %}
 {% else %}
+<h1 style=" text-transform: capitalize;">Create user</h1>
 <div class="row">
   <form action="{{ url_for('save_users') }}" method="POST" enctype="multipart/form-data">    
     <div class="row mb-2">

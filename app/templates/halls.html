@@ -79,9 +79,9 @@
             <td style="text-align: center;">
               <a class="button button-small edit" id="getLoc" title="getLocation"
                 onclick="getLocation(this)">
-                <i class="fa fa-trash fa-lg"></i>
+                <i class="fa fa-search fa-lg"></i>
               </a>
-            </td>                  
+            </td>                 
             {{delBtn("")}}
           </tr>
           {% endif %}
@@ -104,15 +104,42 @@ function addNewRecord() {
   let sn = document.querySelectorAll('#sn');  
   const table = document.querySelector("#editableTable");
 
-  $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td><input class="form-control" type="text" name="name" id="name" value="" required=""> <input type="hidden" name="id" value=""></td><td> <input class="form-control" type="text" name="lat" id="lat" value="" required> </td><td> <input class="form-control" type="text" name="lang" id="lang" value="" required> </td> <td style="text-align: center;"><a class="button button-small edit" href="" title="Delete" onclick="delRecord(this)"> <i class="fa fa-trash fa-lg"></i> </a> </td></tr>`);  
+  $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td><input class="form-control" type="text" name="name" id="name" value="" required=""> <input type="hidden" name="id" value=""></td><td> <input class="form-control" type="text" name="lat" id="lat" value="" required> </td><td> <input class="form-control" type="text" name="lang" id="lang" value="" required>
+    <td style="text-align: center;">
+              <a class="button button-small edit" id="getLoc" title="getLocation"
+                onclick="getLocation(this)">
+                <i class="fa fa-search fa-lg"></i>
+              </a>
+            </td></td> <td style="text-align: center;"><a class="button button-small edit" href="" title="Delete" onclick="delRecord(this)"> <i class="fa fa-trash fa-lg"></i> </a> </td></tr>`);  
 }  
 
+function catchError(positionError) {
+  switch(positionError.code)
+  {
+	case positionError.TIMEOUT:
+	  alert("The request to get user location has aborted as it has taken too long.");
+	  break;
+	case positionError.POSITION_UNAVAILABLE:
+	  alert("Location information is not available.");
+	  break;
+	case positionError.PERMISSION_DENIED:
+	  alert("Permission to share location information has been denied!");
+	  break;
+	default:
+	  alert("An unknown error occurred.");
+  }
+}
 // Get Location Info
 function getLocation(obj) {
+    const positionOptions = {
+    timeout : Infinity,
+    maximumAge : 0,
+    enableHighAccuracy : true
+  }  
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition( function (position) {
       fillCurrentPosition(obj, position)
-    } );
+    },catchError, positionOptions );
   } else {
     flash("Geolocation is not supported by this browser., Please Allow Location Access and make sure to use Google Chrome", "danger");
   }
@@ -124,6 +151,8 @@ function fillCurrentPosition(obj, position) {
   
   console.log(lat)
   console.log(long)
+
+  // console.log(position.coords.accuracy)
 
   const latBox = obj.parentElement.parentElement.querySelector('#lat')
   const longBox = obj.parentElement.parentElement.querySelector('#lang')

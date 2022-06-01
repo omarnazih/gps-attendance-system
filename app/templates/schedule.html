@@ -1,0 +1,105 @@
+{% extends 'base.html' %} 
+{% from "includes/_macros.html" import delBtn, addRowBtn, comboBox %}
+
+{% block title %} {{title}} {% endblock %} 
+
+{% block css %} 
+{% endblock %} 
+
+{% block content %}
+
+<h1>Edit {{title}}</h1>  
+
+<div class="row">
+  <div class="col-md-12">      
+    <a href="{{url_for('sch_edit')}}" class="btn btn-default pull-right add-row text-light bg-success bg-gradient" 
+    >New</a>
+  </div>
+</div> 
+<div class="row">
+  <form action="" method="POST" enctype="multipart/form-data">
+    <div class="col-md-12">
+      <table class="table table-bordered" id="editableTable">
+        <thead>
+          <tr class="bg-secondary text-light">
+            <th width="6%">sn</th>            
+            <th>Major</th>
+            <th>Year</th>
+            <th>Group Name</th>
+            <th width="2%">Edit</th>
+            <th width="2%">Del.</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% if data %}
+          {% for row in data %}
+          <tr>
+            <td>
+              <input class="form-control" type="text" id="sn" readonly="true" value="{{row.row_num}}">
+            </td>
+            <td>
+              <input type="hidden" name="id" value="{{row.id}}">
+              <input class="form-control" type="text" name="major-name" id="major-name" value="{{row.major_name}}" readonly>
+            </td>
+            <td>
+              <input class="form-control" type="text" name="year" id="year" value="{{row.year}}" readonly>
+            </td>
+            <td>
+              <input class="form-control" type="text" name="grp-name" id="grp-name" value="{{row.grpname}}" readonly>
+            </td>
+            <td style="text-align: center;">
+              <a class="button button-small edit" href="{{url_for('sch_edit', grp_id=row.grp_id, year=row.year_id, major_id=row.major_id)}}" title="Edit"
+                onclick="">
+                <i class="fa fa-edit fa-lg"></i>
+              </a>
+            </td>            
+            <td style="text-align: center;">
+              <input type="hidden" name="grp_id" id="grp_id" value="{{row.grp_id}}">
+              <input type="hidden" name="year_id" id="year_id" value="{{row.year_id}}">
+              <input type="hidden" name="major_id" id="major_id" value="{{row.major_id}}">
+              <a class="button button-small edit" id="delBtn" href="{{url_for('del_sch', grp_id=row.grp_id, year=row.year_id, major_id=row.major_id)}}" 
+                title="delete" >
+                <i class="fa fa-trash fa-lg"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}                                      
+        {% endif %}
+        </tbody>
+      </table>      
+  </form>
+</div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>  
+
+  // const delBtns = document.querySelectorAll('#delBtn');
+
+  // delBtns.forEach((btn)=>{btn.addEventListener('click', delAjax(btn, event))  })
+
+  //   async function delAjax (obj, event) {
+    
+  //   // event.preventDefault();
+  //   const grp_id = obj.parentElement.parentElement.querySelector('#grp_id');
+  //   const year_id = obj.parentElement.parentElement.querySelector('#year_id');
+  //   const major_id = obj.parentElement.parentElement.querySelector('#major_id');
+
+  //   console.log(grp_id, year_id, major_id)
+
+  //   const delURL = `${window.origin}/del_sch/${grp_id.value}/${year_id.value}/${major_id.value}`
+
+  //   alert(delURL)
+  //   const response = await fetch(delURL,{method: "POST"})    
+  //   const data = await response.json() 
+
+  //   if(data.state === "success"){
+  //     flash(message, 'success')
+  //   }else{
+  //     flash(message, 'danger')
+  //   }
+  //   alert(obj)
+  // }    
+</script>
+{% endblock %}

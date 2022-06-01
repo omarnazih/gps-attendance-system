@@ -80,3 +80,24 @@ CREATE TABLE `attendance` (
   CONSTRAINT `attendance_class_id_fk` FOREIGN KEY (`module_id`) REFERENCES `modules` (`id`),
   CONSTRAINT `attendance_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 );
+
+alter table schedule
+add year INT(1);
+
+alter table schedule
+add major_id INT;
+
+alter table schedule
+add constraint schedule_major_id_fk foreign key (major_id) references majors(id);
+
+alter table users
+drop constraint users_sch_id_fk ;
+
+alter table users
+drop sch_id;
+
+alter table users
+add grp_id int;
+
+alter table users
+add constraint users_grp_id_fk foreign key (grp_id) references sch_groups(id) ;        

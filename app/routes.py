@@ -37,11 +37,29 @@ def home_page():
    # Create cursor
    cur = db.connection.cursor() 
    
-   # Get System Users
-   #TODO : select modules only in the same daty and time period
-   result = cur.execute("select * from modules")
-   classData = cur.fetchall()   
+   now = datetime.datetime.now()
+   dayName = now.strftime("%A")
+   print(now.strftime("%A"))   
 
+   hoursMinutes = f"{now.hour}:{now.minute}"
+
+   print(hoursMinutes)
+
+   sql = f"""
+            select module.* 
+            from schedule sch, modules module
+            where sch.module_id = module.id
+            and lower(sch.day) like lower('{dayName}')
+            and sch.time_from < '{hoursMinutes}'
+            and sch.time_to > '{hoursMinutes}';      
+         """
+   cur.execute(sql)
+   classData = cur.fetchall()     
+
+   print(classData)     
+      
+   #TODO : Get only right modules
+ 
    return render_template('home.html', title = "home page", classData = classData)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -123,13 +141,15 @@ def user_edit(user_id):
       result = cur.execute(f"select users.* from users where id = {user_id}")
       usersData = cur.fetchall()   
 
-   userTypeCombo = ({'id': 'A', 'name': 'Admin'}, {'id': 'S', 'name': 'Student'}, {'id': 'T', 'name': 'Teaching staff'})
-   yearsCombo = ({'id': 1, 'name': 'Prep'}, {'id': 2, 'name': 'Y1'}, {'id': 3, 'name': 'Y2'}, {'id': 4, 'name': 'Y3'}, {'id': 5, 'name': 'Y4'}) 
+   userTypeCombo = ({'id': '', 'name': ''}, {'id': 'A', 'name': 'Admin'}, {'id': 'S', 'name': 'Student'}, {'id': 'T', 'name': 'Teaching staff'})
+   yearsCombo = ({'id': '', 'name': ''}, {'id': 1, 'name': 'Prep'}, {'id': 2, 'name': 'Y1'}, {'id': 3, 'name': 'Y2'}, {'id': 4, 'name': 'Y3'}, {'id': 5, 'name': 'Y4'}) 
       
-   result = cur.execute("select id, id as name from schedule")
-   schData = cur.fetchall() 
+   cur.execute("""
+                  select id, name 
+                  from sch_groups""")
+   grpData = cur.fetchall() 
 
-   return render_template('useredit.html', title = "User Edit", usersData = usersData, userTypeCombo= userTypeCombo, schData=schData, yearsCombo=yearsCombo)
+   return render_template('useredit.html', title = "User Edit", usersData = usersData, userTypeCombo= userTypeCombo, grpData=grpData, yearsCombo=yearsCombo)
 
 @app.route('/save_users', methods=['GET', 'POST'])
 @is_logged_in
@@ -146,7 +166,7 @@ def save_users():
    usertype = request.form.get('usertype')  
    year = request.form.get('year')  
    notes = request.form.get('notes')  
-   schedule = request.form.get('sch') 
+   grp = request.form.get('grp') 
    old_pic = request.form.get('old_pic') 
    
    picture = request.files.get('picture') 
@@ -175,8 +195,8 @@ def save_users():
       id = res['id']                        
 
       sql = f"""
-            insert into users (id, username, pwd, name, email, notes, sch_id, year, usertype, picture)
-            values ({id}, '{username}' , '{password}', '{name}', '{email}', '{notes}', {nvl(schedule)}, {nvl(year)}, '{nvl(usertype)}', '{absolute_path}');      
+            insert into users (id, username, pwd, name, email, notes, grp_id, year, usertype, picture)
+            values ({id}, '{username}' , '{password}', '{name}', '{email}', '{notes}', {nvl(grp)}, {nvl(year)}, '{nvl(usertype)}', '{absolute_path}');      
             """               
    else:
       sql = f"""
@@ -188,7 +208,7 @@ def save_users():
                   pwd = '{password}',
                   email = '{email}',
                   notes = '{notes}',
-                  sch_id = {nvl(schedule)},
+                  grp_id = {nvl(grp)},
                   year = {nvl(year)},
                   usertype = '{nvl(usertype)}',
                   picture = '{absolute_path}'
@@ -217,6 +237,312 @@ def del_user(userID):
    flash("Data Deleted Successfully", "alert-success")      
       
    return redirect(url_for('users'))   
+
+#!Start Schedule 
+@app.route('/schedule')
+@is_logged_in
+def schedule():    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   # Get System Users
+   cur.execute("SET @row_number = 0;")   
+   sql= """
+         select (@row_number:=@row_number + 1) AS row_num, sch.id, grp.name grpname, grp.id grp_id, sch.major_id as major_id, major.name as major_name,
+         case 
+         when sch.year = 1 then 'Prep'
+         when sch.year = 2 then 'Y1'
+         when sch.year = 3 then 'Y2'
+         when sch.year = 4 then 'Y3'
+         when sch.year = 5 then 'Y4'
+         else ''
+         end as year , sch.year as year_id        
+         from schedule sch, sch_groups grp, majors major
+         where sch.grp_id = grp.id
+         and sch.major_id = major.id
+         group by grp.name, year, major.name;      
+        """            
+   result = cur.execute(sql)
+   data = cur.fetchall()                
+
+   return render_template('schedule.html', title = "Schedule", data = data)
+
+
+@app.route('/sch_edit', defaults={'grp_id':None, 'year': None, 'major_id': None})
+@app.route('/sch_edit/<int:grp_id>',defaults={'year': None, 'major_id': None})
+@app.route('/sch_edit/<int:grp_id>/<int:year>',defaults={'major_id': None})
+@app.route('/sch_edit/<int:grp_id>/<int:year>/<int:major_id>')
+@is_logged_in
+def sch_edit(grp_id, year, major_id):    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   data = []
+   # Get System Users   
+   if grp_id != None :
+      result = cur.execute(f"select schedule.* from schedule where grp_id = {grp_id} and year = {year} and major_id = {major_id} LIMIT 1")
+      data = cur.fetchall()   
+
+   yearsCombo = ({'id': '', 'name': ''},{'id': 1, 'name': 'Prep'}, {'id': 2, 'name': 'Y1'}, {'id': 3, 'name': 'Y2'}, {'id': 4, 'name': 'Y3'}, {'id': 5, 'name': 'Y4'}) 
+      
+   cur.execute("""select null as id, '' as name 
+                  from dual 
+                  union all
+                  select id , name 
+                  from sch_groups""")
+   grpCombo = cur.fetchall() 
+
+   cur.execute("""select null as id, '' as name 
+                  from dual 
+                  union all 
+                  select id, name
+                  from majors""")
+   majorCombo = cur.fetchall() 
+
+   cur.execute("""select '' as id, '' as name 
+                  from dual 
+                  union all
+                  select id, name
+                  from modules""")
+   moduleCombo = cur.fetchall() 
+
+   cur.execute("""select '' as id, '' as name 
+                  from dual 
+                  union all
+                  select id, name
+                  from halls""")
+   hallCombo = cur.fetchall() 
+
+   return render_template('schedit.html', title = "Schedule", data = data, yearsCombo=yearsCombo, grpCombo=grpCombo, majorCombo=majorCombo, moduleCombo=moduleCombo, hallCombo=hallCombo)
+
+@app.route('/save_sch', methods=['GET', 'POST'])
+@is_logged_in
+def save_sch():    
+   # Create cursor
+   cur = db.connection.cursor()      
+
+   #Storing Data into variables
+   id = request.form.get('id')
+   major = request.form.get('major')    
+   year = request.form.get('year')  
+   grp = request.form.get('grp') 
+
+   # sat
+   module_sat_s1 = request.form.get('module_sat_s1') 
+   module_sat_s2 = request.form.get('module_sat_s2')  
+   module_sat_s3 = request.form.get('module_sat_s3')  
+   module_sat_s4 = request.form.get('module_sat_s4')  
+   module_sat_s5 = request.form.get('module_sat_s5') 
+   module_sat_s6 = request.form.get('module_sat_s6')
+
+   # Sat Halls
+   module_sat_s1_hall = request.form.get('module_sat_s1_hall') 
+   module_sat_s2_hall = request.form.get('module_sat_s2_hall')  
+   module_sat_s3_hall = request.form.get('module_sat_s3_hall')  
+   module_sat_s4_hall = request.form.get('module_sat_s4_hall')  
+   module_sat_s5_hall = request.form.get('module_sat_s5_hall') 
+   module_sat_s6_hall = request.form.get('module_sat_s6_hall')
+
+   satList = (
+            {'mod':module_sat_s1, 'from': '9:00', 'to': '9:50', 'hall': module_sat_s1_hall},
+            {'mod':module_sat_s2, 'from': '10:00', 'to': '10:50', 'hall': module_sat_s2_hall},
+            {'mod':module_sat_s3, 'from': '11:00', 'to': '11:50', 'hall': module_sat_s3_hall},
+            {'mod':module_sat_s4, 'from': '12:00', 'to': '12:50', 'hall': module_sat_s4_hall},
+            {'mod':module_sat_s5, 'from': '13:00', 'to': '13:50', 'hall': module_sat_s5_hall},
+            {'mod':module_sat_s6, 'from': '14:00', 'to': '14:50', 'hall': module_sat_s6_hall},
+            )   
+
+   # sun
+   module_sun_s1 = request.form.get('module_sun_s1')
+   module_sun_s2 = request.form.get('module_sun_s2')
+   module_sun_s3 = request.form.get('module_sun_s3')
+   module_sun_s4 = request.form.get('module_sun_s4')
+   module_sun_s5 = request.form.get('module_sun_s5')
+   module_sun_s6 = request.form.get('module_sun_s6')
+
+   # Sun Halls
+   module_sun_s1_hall = request.form.get('module_sun_s1_hall')
+   module_sun_s2_hall = request.form.get('module_sun_s2_hall')
+   module_sun_s3_hall = request.form.get('module_sun_s3_hall')
+   module_sun_s4_hall = request.form.get('module_sun_s4_hall')
+   module_sun_s5_hall = request.form.get('module_sun_s5_hall')
+   module_sun_s6_hall = request.form.get('module_sun_s6_hall')
+
+   sunList = (
+            {'mod':module_sun_s1, 'from': '9:00', 'to': '9:50', 'hall': module_sun_s1_hall},
+            {'mod':module_sun_s2, 'from': '10:00', 'to': '10:50', 'hall': module_sun_s2_hall},
+            {'mod':module_sun_s3, 'from': '11:00', 'to': '11:50', 'hall': module_sun_s3_hall},
+            {'mod':module_sun_s4, 'from': '12:00', 'to': '12:50', 'hall': module_sun_s4_hall},
+            {'mod':module_sun_s5, 'from': '13:00', 'to': '13:50', 'hall': module_sun_s5_hall},
+            {'mod':module_sun_s6, 'from': '14:00', 'to': '14:50', 'hall': module_sun_s6_hall},
+            ) 
+
+   # mon
+   module_mon_s1 = request.form.get('module_mon_s1')
+   module_mon_s2 = request.form.get('module_mon_s2')
+   module_mon_s3 = request.form.get('module_mon_s3')
+   module_mon_s4 = request.form.get('module_mon_s4')
+   module_mon_s5 = request.form.get('module_mon_s5')
+   module_mon_s6 = request.form.get('module_mon_s6')
+
+   # mon Halls
+   module_mon_s1_hall = request.form.get('module_mon_s1_hall')
+   module_mon_s2_hall = request.form.get('module_mon_s2_hall')
+   module_mon_s3_hall = request.form.get('module_mon_s3_hall')
+   module_mon_s4_hall = request.form.get('module_mon_s4_hall')
+   module_mon_s5_hall = request.form.get('module_mon_s5_hall')
+   module_mon_s6_hall = request.form.get('module_mon_s6_hall')
+   
+   monList = (
+            {'mod':module_mon_s1, 'from': '9:00', 'to': '9:50', 'hall': module_mon_s1_hall},
+            {'mod':module_mon_s2, 'from': '10:00', 'to': '10:50', 'hall': module_mon_s2_hall},
+            {'mod':module_mon_s3, 'from': '11:00', 'to': '11:50', 'hall': module_mon_s3_hall},
+            {'mod':module_mon_s4, 'from': '12:00', 'to': '12:50', 'hall': module_mon_s4_hall},
+            {'mod':module_mon_s5, 'from': '13:00', 'to': '13:50', 'hall': module_mon_s5_hall},
+            {'mod':module_mon_s6, 'from': '14:00', 'to': '14:50', 'hall': module_mon_s6_hall},
+            ) 
+
+   # tue
+   module_tue_s1 = request.form.get('module_tue_s1')
+   module_tue_s2 = request.form.get('module_tue_s2')
+   module_tue_s3 = request.form.get('module_tue_s3')
+   module_tue_s4 = request.form.get('module_tue_s4')
+   module_tue_s5 = request.form.get('module_tue_s5')
+   module_tue_s6 = request.form.get('module_tue_s6')
+
+   # tue Halls
+   module_tue_s1_hall = request.form.get('module_tue_s1_hall')
+   module_tue_s2_hall = request.form.get('module_tue_s2_hall')
+   module_tue_s3_hall = request.form.get('module_tue_s3_hall')
+   module_tue_s4_hall = request.form.get('module_tue_s4_hall')
+   module_tue_s5_hall = request.form.get('module_tue_s5_hall')
+   module_tue_s6_hall = request.form.get('module_tue_s6_hall')   
+
+   tueList = (
+            {'mod':module_tue_s1, 'from': '9:00', 'to': '9:50', 'hall': module_tue_s1_hall},
+            {'mod':module_tue_s2, 'from': '10:00', 'to': '10:50', 'hall': module_tue_s2_hall},
+            {'mod':module_tue_s3, 'from': '11:00', 'to': '11:50', 'hall': module_tue_s3_hall},
+            {'mod':module_tue_s4, 'from': '12:00', 'to': '12:50', 'hall': module_tue_s4_hall},
+            {'mod':module_tue_s5, 'from': '13:00', 'to': '13:50', 'hall': module_tue_s5_hall},
+            {'mod':module_tue_s6, 'from': '14:00', 'to': '14:50', 'hall': module_tue_s6_hall},
+            )  
+
+   # tue
+   module_wed_s1 = request.form.get('module_wed_s1')
+   module_wed_s2 = request.form.get('module_wed_s2')
+   module_wed_s3 = request.form.get('module_wed_s3')
+   module_wed_s4 = request.form.get('module_wed_s4')
+   module_wed_s5 = request.form.get('module_wed_s5')
+   module_wed_s6 = request.form.get('module_wed_s6')
+
+   # wed Halls
+   module_wed_s1_hall = request.form.get('module_wed_s1_hall')
+   module_wed_s2_hall = request.form.get('module_wed_s2_hall')
+   module_wed_s3_hall = request.form.get('module_wed_s3_hall')
+   module_wed_s4_hall = request.form.get('module_wed_s4_hall')
+   module_wed_s5_hall = request.form.get('module_wed_s5_hall')
+   module_wed_s6_hall = request.form.get('module_wed_s6_hall')    
+
+   wedList = (
+            {'mod':module_wed_s1, 'from': '9:00', 'to': '9:50', 'hall': module_wed_s1_hall},
+            {'mod':module_wed_s2, 'from': '10:00', 'to': '10:50', 'hall': module_wed_s2_hall},
+            {'mod':module_wed_s3, 'from': '11:00', 'to': '11:50', 'hall': module_wed_s3_hall},
+            {'mod':module_wed_s4, 'from': '12:00', 'to': '12:50', 'hall': module_wed_s4_hall},
+            {'mod':module_wed_s5, 'from': '13:00', 'to': '13:50', 'hall': module_wed_s5_hall},
+            {'mod':module_wed_s6, 'from': '14:00', 'to': '14:50', 'hall': module_wed_s6_hall},
+            )  
+
+   # thur
+   module_thur_s1 = request.form.get('module_thur_s1')
+   module_thur_s2 = request.form.get('module_thur_s2')
+   module_thur_s3 = request.form.get('module_thur_s3')
+   module_thur_s4 = request.form.get('module_thur_s4')
+   module_thur_s5 = request.form.get('module_thur_s5')
+   module_thur_s6 = request.form.get('module_thur_s6')                
+
+   # tue Halls
+   module_thur_s1_hall = request.form.get('module_thur_s1_hall')
+   module_thur_s2_hall = request.form.get('module_thur_s2_hall')
+   module_thur_s3_hall = request.form.get('module_thur_s3_hall')
+   module_thur_s4_hall = request.form.get('module_thur_s4_hall')
+   module_thur_s5_hall = request.form.get('module_thur_s5_hall')
+   module_thur_s6_hall = request.form.get('module_thur_s6_hall')    
+
+   thurList = (
+            {'mod':module_thur_s1, 'from': '9:00', 'to': '9:50', 'hall': module_thur_s1_hall},
+            {'mod':module_thur_s2, 'from': '10:00', 'to': '10:50', 'hall': module_thur_s2_hall},
+            {'mod':module_thur_s3, 'from': '11:00', 'to': '11:50', 'hall': module_thur_s3_hall},
+            {'mod':module_thur_s4, 'from': '12:00', 'to': '12:50', 'hall': module_thur_s4_hall},
+            {'mod':module_thur_s5, 'from': '13:00', 'to': '13:50', 'hall': module_thur_s5_hall},
+            {'mod':module_thur_s6, 'from': '14:00', 'to': '14:50', 'hall': module_thur_s6_hall},
+            )   
+
+   if id == '':                      
+      for elm in satList :
+         day = 'Saturday'
+         # Creating Next ID
+         cur.execute("select IFNULL(max(id),0)+1 as id from schedule")
+         res = cur.fetchone()        
+         id = res['id']    
+
+         sql = f"""
+               insert into schedule 
+                  (`id`,
+                  `hall_id`,
+                  `module_id`,
+                  `day`,
+                  `time_from`,
+                  `time_to`,
+                  `grp_id`,
+                  `year`,
+                  `major_id`)
+               values 
+                  ({id}, {nvl(elm['hall'])} , {nvl(elm['mod'])}, '{day}', '{elm['from']}', '{elm['to']}', {nvl(grp)}, {nvl(year)}, {nvl(major)});      
+               """ 
+         result = cur.execute(sql)      
+         db.connection.commit()                                 
+   else:
+      for elm in satList :   
+         day = 'Saturday'   
+         sql = f"""   
+               update 
+                  schedule
+               set 
+                     hall_id = {nvl(elm['hall'])},
+                     module_id = {nvl(elm['mod'])},
+                     day = '{day}',
+                     time_from = '{elm['from']}',
+                     time_to = '{elm['to']}',
+                     grp_id = {nvl(grp)},
+                     year = {nvl(year)},
+                     major_id = {nvl(major)}
+               where 
+                  id = {id};      
+               """   
+         print(sql)      
+         result = cur.execute(sql)      
+         db.connection.commit()           
+                        
+   # FeedBack    
+   flash('Data Updated Successfully', 'alert-success')                        
+
+   return redirect(url_for('sch_edit', sch_id=id))
+
+@app.route('/del_sch/<int:grp_id>/<int:year>/<int:major_id>' , methods=['POST', 'GET'])
+@is_logged_in
+def del_sch(grp_id, year, major_id):    
+   # Create cursor
+   cur = db.connection.cursor() 
+   try:      
+      sql = f"delete from schedule where grp_id = {grp_id} and year = {year} and major_id={major_id}"
+      cur.execute(sql)
+      db.connection.commit()             
+
+      flash("Data updated!!", "alert-success")
+      return redirect(url_for('schedule'))
+   except:
+      flash("Something went Wrong!!", "alert-danger")
+      return redirect(url_for('schedule'))                      
 
 @app.route('/classes')
 @is_logged_in
@@ -349,15 +675,11 @@ def delete_hall(hallID):
    # Create cursor
    cur = db.connection.cursor() 
 
-   cur.execute(f"select id from schedule where hall_id = {hallID}")
-   res = cur.fetchone()        
-   sch_id = res['id']  
+   # cur.execute(f"select id from schedule where hall_id = {hallID}")
+   # res = cur.fetchone()        
+   # sch_id = res['id']  
 
-   sql = f"delete from users where sch_id = {sch_id}"
-   cur.execute(sql)
-   db.connection.commit()  
-
-   sql = f"delete from schedule where hall_id = {hallID}"
+   sql = f"update schedule set hall_id = null where hall_id = {hallID}"
    cur.execute(sql)
    db.connection.commit()        
 
@@ -504,7 +826,8 @@ def face_auth():
 
    # sql = "select * from schedule where class_id = '{}' and hall_id={};".format(classID, classID)
    # TODO Replace the one in format below with real hall_id
-   sql = "select * from halls where id = {};".format(1)
+   # hall_id = 1
+   sql = "select * from halls where id = {};".format(hall_id)
    result = cur.execute(sql)
    locationData = cur.fetchone()     
 

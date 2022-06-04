@@ -32,7 +32,8 @@
 {% if classData %}
 <div class="takeattendance" style="margin-top: 5rem">
   <div class="camera d-flex flex-column align-items-center">
-    <input type="hidden" id="class_id" value="{{ classData.id }}">
+    <input type="hidden" id="class_id" value="{{ classData.id }}">    
+    <input type="hidden" id="hall_id" value="{{ hallID }}">    
     <h1 class="mb-4">Take Attendance for <u>{{ classData.name }}</u>  Class </h1>
     <video id="webcam" autoplay playsinline width="640" height="480"></video>
     <canvas id="canvas" class="d-none"></canvas>
@@ -58,6 +59,8 @@
   const webcamElement = document.getElementById('webcam');
   const canvasElement = document.getElementById('canvas');
   const classID = document.getElementById('class_id');
+  const hallID = document.getElementById('hall_id');
+    
   const webcam = new Webcam(webcamElement, 'user', canvasElement);
 
   // Start webcam
@@ -72,9 +75,10 @@
   document.querySelector("#takePictureBtn").addEventListener('click', () => {
     // Take Picture and store the base64 in variable
     let picture = webcam.snap();    
-    const classIDVal = classID.value;    
+    const classIDVal = classID.value; 
+    const hallIDVal = hallID.value;   
     const newUrl = `${window.origin}/faceauth`;
-    const data = { picture, classIDVal };
+    const data = { picture, classIDVal, hallIDVal};
 
     // checkSamePerson(picture);
 
@@ -120,7 +124,7 @@
           console.log(`Client Lat : ${lat}, long : ${long}`)
           
           if(Math.abs(lat - locationData.loc_lat) < marginError && Math.abs(long - locationData.loc_lang) < marginError){
-            const urlTakeAttendance = `${window.origin}/takeattendance/${classData.id}`;            
+            const urlTakeAttendance = `${window.origin}/takeattendance/${classData.id}/${hallIDVal}`;            
             async function takeAttendance() {              
               const response = await fetch(urlTakeAttendance,{method: "POST"});              
               const data = await response.json()

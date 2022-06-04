@@ -100,4 +100,4 @@ alter table users
 add grp_id int;
 
 alter table users
-add constraint users_grp_id_fk foreign key (grp_id) references sch_groups(id) ;        
+add constraint users_grp_id_fk foreign key (grp_id) references sch_groups(id);        

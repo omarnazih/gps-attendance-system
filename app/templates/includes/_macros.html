@@ -1,11 +1,11 @@
-{% macro draw_card(imageUrl, title, description, classID) %}
+{% macro draw_card(imageUrl, title, description, classID, hallID) %}
 <div class="col-sm-3" style="margin-bottom: 2rem;">
   <div class="card" style="width: 18rem;">
     <img src="{{url_for('static', filename=imageUrl)}}"  class="card-img-top" alt="...">
     <div class="card-body">
       <h5 class="card-title">{{title}}</h5>
       <p class="card-text">{{description}}</p>
-      <a href="{{ url_for('take_attendance', classID=classID) }}" class="btn btn-primary">Take Attendance</a>
+      <a href="{{ url_for('take_attendance', classID=classID, hallID=hallID) }}" class="btn btn-primary">Take Attendance</a>
     </div>
   </div>
 </div>

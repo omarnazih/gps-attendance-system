@@ -46,12 +46,12 @@ def home_page():
    print(hoursMinutes)
 
    sql = f"""
-            select module.* 
+            select module.*, sch.hall_id 
             from schedule sch, modules module
             where sch.module_id = module.id
             and lower(sch.day) like lower('{dayName}')
-            and sch.time_from < '{hoursMinutes}'
-            and sch.time_to > '{hoursMinutes}';      
+            and TIME(sch.time_from) < TIME('{hoursMinutes}')
+            and TIME(sch.time_to) > TIME('{hoursMinutes}');      
          """
    cur.execute(sql)
    classData = cur.fetchall()     
@@ -298,13 +298,23 @@ def sch_edit(grp_id, year, major_id):
                   select id, name
                   from majors""")
    majorCombo = cur.fetchall() 
-
-   cur.execute("""select '' as id, '' as name 
-                  from dual 
-                  union all
-                  select id, name
-                  from modules""")
-   moduleCombo = cur.fetchall() 
+   
+   if major_id:
+      cur.execute(f"""select '' as id, '' as name 
+                     from dual 
+                     union all
+                     select id, name
+                     from modules
+                     where major_id = {major_id}""")
+      moduleCombo = cur.fetchall() 
+   else :
+      cur.execute(f"""select '' as id, '' as name 
+                     from dual 
+                     union all
+                     select id, name
+                     from modules
+                     """)
+      moduleCombo = cur.fetchall()          
 
    cur.execute("""select '' as id, '' as name 
                   from dual 
@@ -500,6 +510,30 @@ def save_sch():
                   ({id}, {nvl(elm['hall'])} , {nvl(elm['mod'])}, '{day}', '{elm['from']}', '{elm['to']}', {nvl(grp)}, {nvl(year)}, {nvl(major)});      
                """ 
          result = cur.execute(sql)      
+         db.connection.commit()     
+
+      for elm in sunList :
+         day = 'Sunday'
+         # Creating Next ID
+         cur.execute("select IFNULL(max(id),0)+1 as id from schedule")
+         res = cur.fetchone()        
+         id = res['id']    
+
+         sql = f"""
+               insert into schedule 
+                  (`id`,
+                  `hall_id`,
+                  `module_id`,
+                  `day`,
+                  `time_from`,
+                  `time_to`,
+                  `grp_id`,
+                  `year`,
+                  `major_id`)
+               values 
+                  ({id}, {nvl(elm['hall'])} , {nvl(elm['mod'])}, '{day}', '{elm['from']}', '{elm['to']}', {nvl(grp)}, {nvl(year)}, {nvl(major)});      
+               """ 
+         result = cur.execute(sql)      
          db.connection.commit()                                 
    else:
       for elm in satList :   
@@ -521,12 +555,33 @@ def save_sch():
                """   
          print(sql)      
          result = cur.execute(sql)      
+         db.connection.commit()   
+
+      for elm in sunList :   
+         day = 'Sunday'   
+         sql = f"""   
+               update 
+                  schedule
+               set 
+                     hall_id = {nvl(elm['hall'])},
+                     module_id = {nvl(elm['mod'])},
+                     day = '{day}',
+                     time_from = '{elm['from']}',
+                     time_to = '{elm['to']}',
+                     grp_id = {nvl(grp)},
+                     year = {nvl(year)},
+                     major_id = {nvl(major)}
+               where 
+                  id = {id};
+               """   
+         print(sql)      
+         result = cur.execute(sql)      
          db.connection.commit()           
                         
    # FeedBack    
    flash('Data Updated Successfully', 'alert-success')                        
 
-   return redirect(url_for('sch_edit', sch_id=id))
+   return redirect(url_for('sch_edit', grp_id=grp, year=year, major_id=major ))
 
 @app.route('/del_sch/<int:grp_id>/<int:year>/<int:major_id>' , methods=['POST', 'GET'])
 @is_logged_in
@@ -761,9 +816,9 @@ def save_hall():
 
    return redirect(url_for('halls'))     
 
-@app.route('/takeattendance/<string:classID>', methods=['GET', 'POST'])
+@app.route('/takeattendance/<string:classID>/<int:hallID>', methods=['GET', 'POST'])
 @is_logged_in
-def take_attendance(classID):   
+def take_attendance(classID, hallID):   
    # Create cursor
    cur = db.connection.cursor() 
 
@@ -774,7 +829,7 @@ def take_attendance(classID):
       result = cur.execute(sql)
       classData = cur.fetchone()  
 
-      return render_template('take_attendance.html', title = "Take Attendance", classData = classData)
+      return render_template('take_attendance.html', title = "Take Attendance", classData = classData, hallID=hallID)
 
    elif request.method == 'POST' and session['is_student'] == 'Y' :      
       CurrentDate=datetime.date.today()  
@@ -803,7 +858,7 @@ def take_attendance(classID):
       else :   
          return jsonify(response="Attendance Taken Before")                  
    else :
-      return jsonify(response="Something went wrong!!")                        
+      return jsonify(response="Something went wrong!!, Please Make sure you registered as student before taking attendance")                        
 
 @app.route('/faceauth', methods=['GET', 'POST'])
 @is_logged_in
@@ -814,6 +869,7 @@ def face_auth():
    json = request.get_json();   
    image = json['picture']
    classID = json['classIDVal']
+   hallID = json['hallIDVal']
 
    cur.execute(f"select picture from users where id = {session['user_id']}")
    picPath = cur.fetchone()
@@ -824,17 +880,41 @@ def face_auth():
    result = cur.execute(sql)
    classData = cur.fetchone()  
 
-   # sql = "select * from schedule where class_id = '{}' and hall_id={};".format(classID, classID)
-   # TODO Replace the one in format below with real hall_id
-   # hall_id = 1
-   sql = "select * from halls where id = {};".format(hall_id)
-   result = cur.execute(sql)
-   locationData = cur.fetchone()     
+   if hallID:
+      sql = "select * from halls where id = {};".format(hallID)           
+      cur.execute(sql)
+      locationData = cur.fetchone()    
+   else :
+      locationData = []    
+      flash("No Hall Is Provided", "alert-danger")
 
    if res == True:
       return jsonify(isSamePerson="True", classData = classData, locationData=locationData) 
    else :
       return jsonify(isSamePerson="False", classData = classData, locationData=locationData) 
 
+@app.route('/attendancerep', methods=['GET', 'POST'])
+@is_logged_in
+def attendancerep():
+   # Cursor
+   cur = db.connection.cursor() 
+   # Set row count to 0   
+   cur.execute("SET @row_number = 0;")               
 
+   cur.execute("""select (@row_number:=@row_number + 1) AS row_num, 
+                  att.date, TIME(att.time) time, usr.name username,module.name modname,
+                  case 
+                  when usr.year = 1 then 'Prep'
+                  when usr.year = 2 then 'Y1'
+                  when usr.year = 3 then 'Y2'
+                  when usr.year = 4 then 'Y3'
+                  when usr.year = 5 then 'Y4'
+                  else ''
+                  end as year                    
+                  from attendance att, users usr, modules module
+                  where att.user_id = usr.id
+                  and att.module_id = module.id 
+                  and usr.usertype = 'S' """)
+   data = cur.fetchall()     
+   return render_template('attendanceReport.html', title = "Attendance Report", data = data)
    

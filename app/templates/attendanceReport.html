@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% from "includes/_macros.html" import draw_card %}
+
+{% block title %}
+  {{title}}
+{% endblock %}
+
+{% block css %}  
+{% endblock %}
+
+{% block content %}
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>sn</th>
+      <th>Student Name</th>
+      <th>Year</th>
+      <th>Date</th>
+      <th>Time</th>
+      <th>Module Name</th>      
+    </tr>
+  </thead>
+  <tbody>
+    {% if data %}
+    {% for row in data %}
+    <tr>
+      <td>{{row.row_num}}</td>
+      <td>{{row.username}}</td>
+      <td>{{row.year}}</td>
+      <td>{{row.date}}</td>
+      <td>{{row.time}}</td>
+      <td>{{row.modname}}</td>      
+    </tr>
+    {% endfor %}
+    {% endif %}
+  </tbody>
+</table>
+{% endblock %}

@@ -16,7 +16,7 @@
  {% if classData %}
   <div class="row">
     {% for class in classData %}
-      {{draw_card('img/firstclass.jpg', class.name, class.description, class.id)}}
+      {{draw_card('img/firstclass.jpg', class.name, class.description, class.id, class.hall_id)}}
     {% endfor %}  
   </div>
  {% endif %}

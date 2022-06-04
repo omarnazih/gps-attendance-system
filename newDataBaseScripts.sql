@@ -101,3 +101,44 @@ add grp_id int;
 
 alter table users
 add constraint users_grp_id_fk foreign key (grp_id) references sch_groups(id);        
+
+-- 04/06/2022 12:24
+create table years (
+	id int not null,
+    year varchar(250),
+    PRIMARY KEY (ID),
+    constraint years_uq unique(id, year)
+);
+
+INSERT INTO `attendancedb`.`years` (`id`, `year`) VALUES ('1', 'Prep');
+INSERT INTO `attendancedb`.`years` (`id`, `year`) VALUES ('2', 'Y1');
+INSERT INTO `attendancedb`.`years` (`id`, `year`) VALUES ('3', 'Y2');
+INSERT INTO `attendancedb`.`years` (`id`, `year`) VALUES ('4', 'Y4');
+INSERT INTO `attendancedb`.`years` (`id`, `year`) VALUES ('5', 'Y5');
+
+create table schedule_hd (
+	id int not null,
+    major_id int,
+    year int,
+    grp_id int,
+    PRIMARY KEY (ID),
+    constraint schedule_hd_major_id_fk foreign key (major_id) references majors(id),
+    constraint schedule_hd_year_id_fk foreign key (year) references years(id),
+    constraint schedule_hd_grp_id_fk foreign key (grp_id) references sch_groups(id),
+    constraint schedule_hd_uq unique(major_id, year, grp_id)
+);
+
+alter table schedule 
+add constraint schedule_hd_id_fk foreign key (hd_id) references schedule_hd(id);
+
+
+ALTER TABLE `attendancedb`.`schedule` 
+DROP FOREIGN KEY `schedule_major_id_fk`,
+DROP FOREIGN KEY `schedule_group_id_fk`;
+ALTER TABLE `attendancedb`.`schedule` 
+DROP COLUMN `major_id`,
+DROP COLUMN `year`,
+DROP COLUMN `grp_id`,
+DROP INDEX `schedule_major_id_fk` ,
+DROP INDEX `schedule_group_id_fk` ;
+;

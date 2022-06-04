@@ -15,7 +15,7 @@
   <form action="{{ url_for('save_sch') }}" method="POST" enctype="multipart/form-data">    
     <div class="row mb-2">
       <div class="col-4">        
-        <input type="hidden" name="id" value="{{row.id}}">
+        <input type="hidden" name="hd_id" value="{{row.id}}">
         <label class="form-label">Major</label>
         {{comboBox('major', majorCombo, row.major_id)}}        
       </div>
@@ -31,246 +31,47 @@
 
     <hr>
 
-    <div class="row mb-4">
-      <h3>Saturday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_sat_s1', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sat_s1_hall', hallCombo, row.hall_id)}}        
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_sat_s2', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sat_s2_hall', hallCombo, row.hall_id)}}          
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_sat_s3', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sat_s3_hall', hallCombo, row.hall_id)}}          
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_sat_s4', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sat_s4_hall', hallCombo, row.hall_id)}}          
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_sat_s5', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sat_s5_hall', hallCombo, row.hall_id)}}          
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_sat_s6', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sat_s6_hall', hallCombo, row.hall_id)}}          
-      </div>           
-    </div> 
-
-    <div class="row mb-4">
-      <h3>Sunday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_sun_s1', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sun_s1_hall', hallCombo, row.hall_id)}}          
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_sun_s2', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sun_s2_hall', hallCombo, row.hall_id)}}                  
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_sun_s3', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sun_s3_hall', hallCombo, row.hall_id)}}                  
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_sun_s4', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sun_s4_hall', hallCombo, row.hall_id)}}                  
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_sun_s5', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sun_s5_hall', hallCombo, row.hall_id)}}                  
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_sun_s6', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_sun_s6_hall', hallCombo, row.hall_id)}}                  
-      </div>           
-    </div> 
-
-    <div class="row mb-4">
-      <h3>Monday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_mon_s1', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_mon_s1_hall', hallCombo, row.hall_id)}}                          
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_mon_s2', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_mon_s2_hall', hallCombo, row.hall_id)}}                                  
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_mon_s3', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_mon_s3_hall', hallCombo, row.hall_id)}}                                  
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_mon_s4', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_mon_s4_hall', hallCombo, row.hall_id)}}                                  
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_mon_s5', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_mon_s5_hall', hallCombo, row.hall_id)}}                                  
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_mon_s6', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_mon_s6_hall', hallCombo, row.hall_id)}}                                  
-      </div>           
-    </div> 
-
-    <div class="row mb-4">
-      <h3>Tuesday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_tue_s1', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_tue_s1_hall', hallCombo, row.hall_id)}}
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_tue_s2', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_tue_s2_hall', hallCombo, row.hall_id)}}                                                  
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_tue_s3', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_tue_s3_hall', hallCombo, row.hall_id)}}        
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_tue_s4', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_tue_s4_hall', hallCombo, row.hall_id)}}        
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_tue_s5', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_tue_s5_hall', hallCombo, row.hall_id)}}        
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_tue_s6', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_tue_s6_hall', hallCombo, row.hall_id)}}        
-      </div>           
-    </div> 
-
-    <div class="row mb-4">
-      <h3>Wednesday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_wed_s1', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_wed_s1_hall', hallCombo, row.hall_id)}}
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_wed_s2', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_wed_s2_hall', hallCombo, row.hall_id)}}        
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_wed_s3', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_wed_s3_hall', hallCombo, row.hall_id)}}        
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_wed_s4', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_wed_s4_hall', hallCombo, row.hall_id)}}                
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_wed_s5', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_wed_s5_hall', hallCombo, row.hall_id)}}                
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_wed_s6', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_wed_s6_hall', hallCombo, row.hall_id)}}                
-      </div>           
-    </div> 
-
-    <div class="row mb-4">
-      <h3>Thursday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_thur_s1', moduleCombo, row.module_id)}}        
-        <br>        
-        {{comboBox('module_thur_s1_hall', hallCombo, row.hall_id)}}                        
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_thur_s2', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_thur_s2_hall', hallCombo, row.hall_id)}}                                
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_thur_s3', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_thur_s3_hall', hallCombo, row.hall_id)}}                                
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_thur_s4', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_thur_s4_hall', hallCombo, row.hall_id)}}                                
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_thur_s5', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_thur_s5_hall', hallCombo, row.hall_id)}}                                
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_thur_s6', moduleCombo, row.module_id)}}
-        <br>        
-        {{comboBox('module_thur_s6_hall', hallCombo, row.hall_id)}}                                
-      </div>           
-    </div> 
-
+    <div class="row mb-2">
+      <div class="col-12">
+        <a class="btn btn-default pull-right new-rec text-light bg-primary bg-gradient" 
+        ><i class="fa fa-plus"></i>&nbsp;&nbsp; Add Row</a>          
+      </div>    
+    </div>
+    <table class="table table-bordered" id="editableTable">
+      <thead>
+        <tr class="bg-secondary text-light">
+          <th width="6%">sn</th>            
+          <th width="15%">Day</th>
+          <th width="15%">Slot</th>
+          <th width="15%">Module</th>
+          <th width="15%">Hall</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% if dt_data %}
+        {% for row in dt_data %}        
+        <tr>
+          <td>
+            <input class="form-control" type="text" id="sn" readonly="true" value="{{row.row_num}}">
+          </td>
+          <td>
+            <input type="hidden" name="dt_id" value="{{row.id}}">
+            {{comboBox('day', dayCombo, row.day)}}
+          </td>
+          <td>            
+            {{comboBox('slot', slotCombo, row.slot_id)}}
+          </td>
+          <td>
+            {{comboBox('module', moduleCombo, row.module_id)}}
+          </td>          
+          <td>
+            {{comboBox('hall', hallCombo, row.hall_id)}}
+          </td>          
+        </tr>
+        {% endfor %}                                      
+      {% endif %}
+      </tbody>
+    </table>     
     <button type="submit" class="btn btn-primary mt-2" id="saveBtn">Save</button>
   </form>
 </div>
@@ -297,245 +98,44 @@
 
     <hr>
 
-    <div class="row mb-4">
-      <h3>Saturday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_sat_s1', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sat_s1_hall', hallCombo, '')}}        
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_sat_s2', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sat_s2_hall', hallCombo, '')}}          
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_sat_s3', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sat_s3_hall', hallCombo, '')}}          
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_sat_s4', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sat_s4_hall', hallCombo, '')}}          
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_sat_s5', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sat_s5_hall', hallCombo, '')}}          
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_sat_s6', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sat_s6_hall', hallCombo, '')}}          
-      </div>           
-    </div> 
+    <div class="row mb-2">
+      <div class="col-12">
+        <a class="btn btn-default pull-right new-rec text-light bg-primary bg-gradient" 
+        ><i class="fa fa-plus"></i>&nbsp;&nbsp; Add Row</a>          
+      </div>    
+    </div>
 
-    <div class="row mb-4">
-      <h3>Sunday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_sun_s1', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sun_s1_hall', hallCombo, '')}}          
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_sun_s2', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sun_s2_hall', hallCombo, '')}}                  
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_sun_s3', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sun_s3_hall', hallCombo, '')}}                  
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_sun_s4', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sun_s4_hall', hallCombo, '')}}                  
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_sun_s5', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sun_s5_hall', hallCombo, '')}}                  
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_sun_s6', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_sun_s6_hall', hallCombo, '')}}                  
-      </div>           
-    </div> 
-
-    <div class="row mb-4">
-      <h3>Monday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_mon_s1', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_mon_s1_hall', hallCombo, '')}}                          
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_mon_s2', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_mon_s2_hall', hallCombo, '')}}                                  
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_mon_s3', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_mon_s3_hall', hallCombo, '')}}                                  
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_mon_s4', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_mon_s4_hall', hallCombo, '')}}                                  
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_mon_s5', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_mon_s5_hall', hallCombo, '')}}                                  
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_mon_s6', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_mon_s6_hall', hallCombo, '')}}                                  
-      </div>           
-    </div> 
-
-    <div class="row mb-4">
-      <h3>Tuesday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_tue_s1', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_tue_s1_hall', hallCombo, '')}}
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_tue_s2', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_tue_s2_hall', hallCombo, '')}}                                                  
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_tue_s3', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_tue_s3_hall', hallCombo, '')}}        
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_tue_s4', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_tue_s4_hall', hallCombo, '')}}        
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_tue_s5', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_tue_s5_hall', hallCombo, '')}}        
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_tue_s6', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_tue_s6_hall', hallCombo, '')}}        
-      </div>           
-    </div> 
-
-    <div class="row mb-4">
-      <h3>Wednesday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_wed_s1', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_wed_s1_hall', hallCombo, '')}}
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_wed_s2', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_wed_s2_hall', hallCombo, '')}}        
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_wed_s3', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_wed_s3_hall', hallCombo, '')}}        
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_wed_s4', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_wed_s4_hall', hallCombo, '')}}                
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_wed_s5', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_wed_s5_hall', hallCombo, '')}}                
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_wed_s6', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_wed_s6_hall', hallCombo, '')}}                
-      </div>           
-    </div> 
-
-    <div class="row mb-4">
-      <h3>Thursday</h3>
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 1</b> (9:00 - 9:50)</label>
-        {{comboBox('module_thur_s1', moduleCombo, '')}}        
-        <br>        
-        {{comboBox('module_thur_s1_hall', hallCombo, '')}}                        
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 2</b> (10:00 - 10:50)</label>
-        {{comboBox('module_thur_s2', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_thur_s2_hall', hallCombo, '')}}                                
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 3</b> (11:00 - 11:50)</label>
-        {{comboBox('module_thur_s3', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_thur_s3_hall', hallCombo, '')}}                                
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 4</b> (12:00 - 12:50)</label>
-        {{comboBox('module_thur_s4', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_thur_s4_hall', hallCombo, '')}}                                
-      </div>           
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 5</b> (13:00 - 13:50)</label>
-        {{comboBox('module_thur_s5', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_thur_s5_hall', hallCombo, '')}}                                
-      </div>      
-      <div class="col-2">        
-        <label class="form-label"><b>Slot 6</b> (14:00 - 14:50)</label>
-        {{comboBox('module_thur_s6', moduleCombo, '')}}
-        <br>        
-        {{comboBox('module_thur_s6_hall', hallCombo, '')}}                                
-      </div>           
-    </div> 
+    <table class="table table-bordered" id="editableTable">
+      <thead>
+        <tr class="bg-secondary text-light">
+          <th width="6%">sn</th>            
+          <th width="15%">Day</th>
+          <th width="15%">Slot</th>
+          <th width="15%">Module</th>
+          <th width="15%">Hall</th>
+        </tr>
+      </thead>
+      <tbody>    
+        <tr>
+          <td>
+            <input class="form-control" type="text" id="sn" readonly="true" value="1">
+          </td>
+          <td>
+            <input type="hidden" name="dt_id" value="">
+            {{comboBox('day', dayCombo)}}
+          </td>
+          <td>            
+            {{comboBox('slot', slotCombo )}}
+          </td>
+          <td>
+            {{comboBox('module', moduleCombo)}}
+          </td>          
+          <td>
+            {{comboBox('hall', hallCombo)}}
+          </td>          
+        </tr>
+      </tbody>
+    </table>     
 
     <button type="submit" class="btn btn-primary mt-2" id="saveBtn">Save</button>
   </form>
@@ -544,6 +144,20 @@
 {% endblock %}
 
 {% block javascript %}
+<script src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
 <script>
+  const newrec = document.querySelector('.new-rec');
+  const newday = document.querySelector('#newday');
+  const newslot = document.querySelector('#newslot');
+  const newmodule = document.querySelector('#newmodule');
+  const newhall = document.querySelector('#newhall');
+
+  newrec.addEventListener('click', addNewRecord);
+function addNewRecord() {
+  let sn = document.querySelectorAll('#sn');  
+  const table = document.querySelector("#editableTable");
+
+  $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td> <input type="hidden" name="id" value="10"> <select class="form-select form-select" name="day" id="day"> <option value=""></option> <option value="Saturday">Saturday</option> <option value="Sunday">Sunday</option> <option value="Monday">Monday</option> <option value="Tuesday">Tuesday</option> <option value="Wednesday" >Wednesday</option> <option value="Thursday">Thursday</option> </select> </td><td> <select class="form-select form-select" name="slot" id="slot"> <option value=""></option> <option value="1">Slot1(9:00-9:50)</option> <option value="2">Slot2(10:00-10:50)</option> <option value="3">Slot3(11:00-11:50)</option> <option value="4">Slot4(12:00-12:50)</option> <option value="5">Slot5(13:00-13:50)</option> <option value="6">Slot6(14:00-14:50)</option> </select> </td><td> <select class="form-select form-select" name="module" id="module"> <option value=""></option> <option value="1">Computer Vision</option> <option value="2">Software Engineering</option> <option value="4">Algorithms </option> </select> </td><td> <select class="form-select form-select" name="hall" id="hall"> <option value=""></option> <option value="5">H1</option> <option value="6">H2</option> </select> </td></tr>`);  
+}    
 </script>
 {% endblock %}

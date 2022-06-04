@@ -48,7 +48,7 @@
               <input class="form-control" type="text" name="grp-name" id="grp-name" value="{{row.grpname}}" readonly>
             </td>
             <td style="text-align: center;">
-              <a class="button button-small edit" href="{{url_for('sch_edit', grp_id=row.grp_id, year=row.year_id, major_id=row.major_id)}}" title="Edit"
+              <a class="button button-small edit" href="{{url_for('sch_edit', id=row.id)}}" title="Edit"
                 onclick="">
                 <i class="fa fa-edit fa-lg"></i>
               </a>
@@ -57,7 +57,7 @@
               <input type="hidden" name="grp_id" id="grp_id" value="{{row.grp_id}}">
               <input type="hidden" name="year_id" id="year_id" value="{{row.year_id}}">
               <input type="hidden" name="major_id" id="major_id" value="{{row.major_id}}">
-              <a class="button button-small edit" id="delBtn" href="{{url_for('del_sch', grp_id=row.grp_id, year=row.year_id, major_id=row.major_id)}}" 
+              <a class="button button-small edit" id="delBtn" href="{{url_for('del_sch', id=row.id)}}" 
                 title="delete" >
                 <i class="fa fa-trash fa-lg"></i>
               </a>

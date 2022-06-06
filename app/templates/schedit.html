@@ -6,7 +6,6 @@
 {% block css %} 
 {% endblock %} 
 
-
 {% block content %}
 {% if data %}
 {% for row in data %}
@@ -20,7 +19,7 @@
         {{comboBox('major', majorCombo, row.major_id)}}        
       </div>
       <div class="col-4">        
-        <label class="form-label">Year</label>
+        <label class="form-label">Year</label>        
         {{comboBox('year', yearsCombo, row.year)}}        
       </div>
       <div class="col-4">
@@ -49,7 +48,7 @@
       </thead>
       <tbody>
       {% if dt_data %}
-        {% for row in dt_data %}        
+        {% for row in dt_data %}               
         <tr>
           <td>
             <input class="form-control" type="text" id="sn" readonly="true" value="{{row.row_num}}">
@@ -68,7 +67,26 @@
             {{comboBox('hall', hallCombo, row.hall_id)}}
           </td>          
         </tr>
-        {% endfor %}                                      
+        {% endfor %}   
+        {% else%}   
+        <tr>
+          <td>
+            <input class="form-control" type="text" id="sn" readonly="true" value="1">
+          </td>
+          <td>
+            <input type="hidden" name="dt_id" value="">
+            {{comboBox('day', dayCombo)}}
+          </td>
+          <td>            
+            {{comboBox('slot', slotCombo)}}
+          </td>
+          <td>
+            {{comboBox('module', moduleCombo)}}
+          </td>          
+          <td>
+            {{comboBox('hall', hallCombo)}}
+          </td>          
+        </tr>                                        
       {% endif %}
       </tbody>
     </table>     

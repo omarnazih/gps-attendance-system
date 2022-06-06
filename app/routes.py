@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from flask import Flask, jsonify,session, render_template, request, redirect, url_for,flash,make_response, Response,send_from_directory
 from functools import wraps
 from app.facialauth import checkSamePerson
+from app.dbhelpers import *
 import datetime
 
 def ifEmpty(var, val):
@@ -275,10 +276,10 @@ def sch_edit(id):
    cur = db.connection.cursor() 
 
    data = []
-   dt_data=[]
+   dt_data=[]   
    # Get System Users   
-   if id != None :
-      result = cur.execute(f"select hd.* from schedule_hd hd, schedule sch where hd.id = sch.id and hd.id = {id} LIMIT 1")
+   if id != None :      
+      result = cur.execute(f"select hd.* from schedule_hd hd where hd.id = {id} LIMIT 1")
       data = cur.fetchall()         
       cur.execute("SET @row_number = 0;")   
       cur.execute(f"""select (@row_number:=@row_number + 1) AS row_num, 
@@ -322,6 +323,7 @@ def sch_edit(id):
                   from halls""")                  
    hallCombo = cur.fetchall() 
 
+   print(data)
    return render_template('schedit.html', title = "Schedule", data = data, dt_data=dt_data, yearsCombo=yearsCombo, grpCombo=grpCombo, majorCombo=majorCombo, moduleCombo=moduleCombo, hallCombo=hallCombo, dayCombo=dayCombo, slotCombo=slotCombo)
 
 @app.route('/save_sch', methods=['GET', 'POST'])
@@ -337,111 +339,143 @@ def save_sch():
    grp = request.form.get('grp') 
 
    # Detail Data
-   dt_id = request.form.getlist('id')
+   dt_id = request.form.getlist('dt_id')
    day = request.form.getlist('day')
    slot = request.form.getlist('slot')
    module = request.form.getlist('module')
    hall = request.form.getlist('hall')   
-   
-   print(hd_id)
-   if hd_id == '' or hd_id == None:  
-      # Last ID + 1
-      cur.execute("select IFNULL(max(id),0)+1 as id from schedule_hd")
-      res = cur.fetchone()        
-      hd_id = res['id']    
+      
+   #Getting lenght of a required value list
+   listLength = len(day) 
 
-      listLength = len(dt_id)  
+   if major != '' or year !='' or grp !='':
+      if hd_id != None:      
+         row_hd={ 
+         'id': hd_id,
+         'major_id': int(major),
+         'year': int(year),
+         'grp_id': int(grp)
+         } 
+         update_sch_hd(row_hd)
+      else :      
+         row_hd={ 
+         'id': ifEmpty(hd_id, None),
+         'major_id': int(major),
+         'year': int(year),
+         'grp_id': int(grp)
+         } 
+         hd_id = save_sch_hd(row_hd)
 
-      sql = f"""
-            insert into schedule_hd 
-               (`id`,
-               `major_id`,
-               `year`,
-               `grp_id`)
-            values 
-               ({hd_id}, {nvl(major)} , {nvl(year)}, {nvl(grp)});      
-            """ 
-      result = cur.execute(sql)      
-      db.connection.commit()       
-
-      if listLength > 0 :
-         for i in range(listLength):  
-            if slot[i] == 1:
+      if listLength > 1 and int(hd_id) > 0:         
+         for x in range (0, listLength): 
+            if slot[x] == '1':
                time_from = '9:00'
                time_to = '9:55'
-            elif slot[i] == 2:
+            elif slot[x] == '2':
                time_from = '10:00'
                time_to = '10:55'                  
-            elif slot[i] == 3:
+            elif slot[x] == '3':
                time_from = '11:00'
                time_to = '11:55'                  
-            elif slot[i] == 4:
+            elif slot[x] == '4':
                time_from = '12:00'
                time_to = '12:55'                  
-            elif slot[i] == 5:
+            elif slot[x] == '5':
                time_from = '13:00'
                time_to = '13:55'                  
-            elif slot[i] == 6:
+            elif slot[x] == '6':
                time_from = '14:00'
-               time_to = '14:55'             
-            if dt_id[i] == '':
-               cur.execute("select IFNULL(max(id),0)+1 as id from schedule")
-               res = cur.fetchone()        
-               id = res['id']   
+               time_to = '14:55'    
+            else:
+               time_from = ''                                      
+               time_to = ''
 
-               sql = f"""
-                     insert into schedule 
-                        (`id`,
-                        `hd_id`,
-                        `module_id`,
-                        `day`,
-                        `time_from`,
-                        `time_to`,
-                        `hall_id`)
-                     values 
-                        ({id}, {hd_id} , {nvl(module[i])}, '{nvl(day[i])}', '{time_from}', '{time_to}', {nvl(hall[i])});      
-                     """ 
-               result = cur.execute(sql)      
-               db.connection.commit()  
-            else :
-               sql = f"""
-                     insert into schedule 
-                        (`id`,
-                        `hd_id`,
-                        `module_id`,
-                        `day`,
-                        `time_from`,
-                        `time_to`,
-                        `hall_id`)
-                     values 
-                        ({dt_id[i]}, {hd_id} , {nvl(module[i])}, '{nvl(day[i])}', '{time_from}', '{time_to}', {nvl(hall[i])});      
-                     """ 
-               result = cur.execute(sql)      
-               db.connection.commit()                 
-   else:
-      sql = f"""   
-            update 
-               schedule
-            set 
-                  hall_id = {nvl(elm['hall'])},
-                  module_id = {nvl(elm['mod'])},
-                  day = '{day}',
-                  time_from = '{elm['from']}',
-                  time_to = '{elm['to']}',
-                  grp_id = {nvl(grp)},
-                  year = {nvl(year)},
-                  major_id = {nvl(major)}
-            where 
-               id = {id};      
-            """   
-      print(sql)      
-      result = cur.execute(sql)      
-      db.connection.commit()                
-                        
-   # FeedBack    
-   flash('Data Updated Successfully', 'alert-success')                        
+            if x >= len(dt_id):
+               row={ 
+                  'id': None,
+                  'hd_id': hd_id, 
+                  'module_id': nvl(module[x]),
+                  'day': nvl(day[x]),
+                  'time_from': time_from,
+                  'time_to': time_to,
+                  'hall_id': nvl(hall[x])
+                  }    
 
-   return redirect(url_for('sch_edit', grp_id=grp, year=year, major_id=major ))
+               save_sch_dt(row)                                          
+            else:                     
+               row={ 
+                  'id': ifEmpty(dt_id[x], None),
+                  'hd_id': hd_id, 
+                  'module_id': nvl(module[x]),
+                  'day': nvl(day[x]),
+                  'time_from': time_from,
+                  'time_to': time_to,
+                  'hall_id': nvl(hall[x])
+                  } 
+               #If Id is null insert new user            
+               if ifEmpty(dt_id[x], None) == None:
+                  save_sch_dt(row)          
+               else :   
+                  update_sch_dt(row)   
+                    
+                      
+      elif listLength == 1 and (hd_id != None or hd_id != ''):                   
+         if slot[0] == '1':
+            time_from = '9:00'
+            time_to = '9:55'
+         elif slot[0] == '2':
+            time_from = '10:00'
+            time_to = '10:55'                  
+         elif slot[0] == '3':
+            time_from = '11:00'
+            time_to = '11:55'                  
+         elif slot[0] == '4':
+            time_from = '12:00'
+            time_to = '12:55'                  
+         elif slot[0] == '5':
+            time_from = '13:00'
+            time_to = '13:55'                  
+         elif slot[0] == '6':
+            time_from = '14:00'
+            time_to = '14:55'    
+         else:
+            time_from = ''                                      
+            time_to = '' 
+
+         while("" in dt_id) :
+            dt_id.remove('')         
+         print(f"this is lngth {len(dt_id)}")
+         print(dt_id)
+         if len(dt_id) > 0:
+            row={ 
+               'id': ifEmpty(dt_id[0], None),
+               'hd_id': hd_id, 
+               'module_id': nvl(module[0]),
+               'day': nvl(day[0]),
+               'time_from': time_from,
+               'time_to': time_to,
+               'hall_id': nvl(hall[0])
+               } 
+            print("I'm here")
+            update_sch_dt(row)   
+         else :
+            row={ 
+               'id': None,
+               'hd_id': hd_id, 
+               'module_id': nvl(module[0]),
+               'day': nvl(day[0]),
+               'time_from': time_from,
+               'time_to': time_to,
+               'hall_id': nvl(hall[0])
+               }   
+            save_sch_dt(row)                                 
+
+      else :    
+         flash('Please Add At least one record before saving ', 'alert-info')                           
+   else :
+      flash('Please Fill Major, Year and Group', 'alert-danger')
+
+   return redirect(url_for('sch_edit', id=hd_id))
 
 
 @app.route('/del_sch/<int:id>' , methods=['POST', 'GET'])

@@ -129,6 +129,9 @@ create table schedule_hd (
 );
 
 alter table schedule 
+add hd_id int;
+
+alter table schedule 
 add constraint schedule_hd_id_fk foreign key (hd_id) references schedule_hd(id);
 
 

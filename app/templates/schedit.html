@@ -11,7 +11,7 @@
 {% for row in data %}
 <h1 style=" text-transform: capitalize;">Edit {{title}} <u>{{row.name}}</u></h1>
 <div class="row">
-  <form action="{{ url_for('save_sch') }}" method="POST" enctype="multipart/form-data">    
+  <form action="{{ url_for('save_sch') }}" id="form" method="POST" enctype="multipart/form-data">    
     <div class="row mb-2">
       <div class="col-4">        
         <input type="hidden" name="hd_id" value="{{row.id}}">
@@ -90,14 +90,14 @@
       {% endif %}
       </tbody>
     </table>     
-    <button type="submit" class="btn btn-primary mt-2" id="saveBtn">Save</button>
+    <button type="button" class="btn btn-primary mt-2" id="saveBtn">Save</button>
   </form>
 </div>
 {% endfor %}
 {% else %}
 <h1 style=" text-transform: capitalize;">Create {{title}}</h1>
 <div class="row">
-  <form action="{{ url_for('save_sch') }}" method="POST" enctype="multipart/form-data">    
+  <form action="{{ url_for('save_sch') }}" id="form" method="POST" enctype="multipart/form-data">    
     <div class="row mb-2">
       <div class="col-4">        
         <input type="hidden" name="id" value="">
@@ -169,6 +169,22 @@
   const newslot = document.querySelector('#newslot');
   const newmodule = document.querySelector('#newmodule');
   const newhall = document.querySelector('#newhall');
+
+  const year = document.getElementById('year');
+  const grp = document.getElementById('grp');
+  const major = document.getElementById('major');
+
+  const saveBtn = document.getElementById('saveBtn');
+
+  saveBtn.addEventListener('click', 
+  function (event) {    
+    if (year.value == '' || grp.value == '' || major.value == ''){
+      event.preventDefault()
+      alert("Plase Fill All Values before saving");
+    }else{
+      document.getElementById("form").submit();
+    }  
+  });
 
   newrec.addEventListener('click', addNewRecord);
 function addNewRecord() {

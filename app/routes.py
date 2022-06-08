@@ -768,12 +768,13 @@ def face_auth():
    image = json['picture']
    classID = json['classIDVal']
    hallID = json['hallIDVal']
-
+   
    cur.execute(f"select picture from users where id = {session['user_id']}")
    picPath = cur.fetchone()
-
+   print(picPath)
    res = checkSamePerson(picPath['picture'], image, 'Y')
-      
+
+   print(f"this is res = {res}")   
    sql = "select * from modules where id = '{}';".format(classID)
    result = cur.execute(sql)
    classData = cur.fetchone()  
@@ -789,6 +790,7 @@ def face_auth():
    if res == True:
       return jsonify(isSamePerson="True", classData = classData, locationData=locationData) 
    else :
+      print("I'm here")
       return jsonify(isSamePerson="False", classData = classData, locationData=locationData) 
 
 @app.route('/attendancerep', methods=['GET', 'POST'])

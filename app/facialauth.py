@@ -13,7 +13,8 @@ def findEncodings(images):
         encode = face_recognition.face_encodings(img)[0]
         encodeList.append(encode)
        except:
-        flash("")   
+        print("There was a problem in facetraining")
+        flash("There was a proplem in face training")   
 
     return encodeList
 
@@ -42,10 +43,7 @@ def checkSamePerson(baseImage, newImage, isBase64='N'):
     imgS = cv2.resize(newImage, (0, 0), None, 0.25, 0.25)
     imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
 
-    # cv2.imshow("test", imgS)        
-    # cv2.waitKey(0)   
-
-    facesCurFrame = face_recognition.face_locations(imgS) 
+    facesCurFrame = face_recognition.face_locations(imgS, model="cnn") 
     encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
 
     # print()

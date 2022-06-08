@@ -6,8 +6,8 @@
 <style>
   @media only screen and (max-width: 768px) {
     #webcam{
-      width:400px;
-      height:300px;
+      width:auto;
+      height:auto;
     }
   }
 </style>
@@ -19,8 +19,9 @@
   style="margin-top: 5rem"
   role="alert"
 >
-  Please Make Sure your face is close to the camera,  
-   And make sure you stand at the same spot as the professor/teacher 's  device
+  Please Make Sure your face is close to the camera.  
+   <br>
+   You <b>MUST</b> Turn on your GPS if your using mobile device
   <button
     type="button"
     class="btn-close"
@@ -35,7 +36,7 @@
     <input type="hidden" id="class_id" value="{{ classData.id }}">    
     <input type="hidden" id="hall_id" value="{{ hallID }}">    
     <h1 class="mb-4">Take Attendance for <u>{{ classData.name }}</u>  Class </h1>
-    <video id="webcam" autoplay playsinline width="640" height="480"></video>
+    <video id="webcam" autoplay playsinline width="700" height="480"></video>
     <canvas id="canvas" class="d-none"></canvas>
     <button
       id="takePictureBtn"
@@ -142,6 +143,7 @@
             takeAttendance()
 
           }else{
+            alert("Not Same Location")
             flash("Not Same Location, Attendance Is not Taken", "danger")
             console.log("Not Same Location")
             return

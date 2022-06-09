@@ -145,3 +145,7 @@ DROP COLUMN `grp_id`,
 DROP INDEX `schedule_major_id_fk` ,
 DROP INDEX `schedule_group_id_fk` ;
 ;
+
+-- 09/06/2022
+alter table halls
+add floor int;

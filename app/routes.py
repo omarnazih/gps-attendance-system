@@ -40,51 +40,61 @@ def home_page():
    
    now = datetime.datetime.now()
    dayName = now.strftime("%A")
-   print(now.strftime("%A"))   
+   # Current Day
+   print(f"Day is {dayName}")   
 
    hoursMinutes = f"{now.hour}:{now.minute}"
 
    print(hoursMinutes)
 
-   sql = f"""
-            select module.*, sch.hall_id 
-            from schedule sch, modules module
-            where sch.module_id = module.id
-            and lower(sch.day) like lower('{dayName}')
-            and TIME(sch.time_from) < TIME('{hoursMinutes}')
-            and TIME(sch.time_to) > TIME('{hoursMinutes}');      
-         """
-   cur.execute(sql)
-   classData = cur.fetchall()     
+   classData=[]
+   if session['year']:
+      year = session['year']
+      sql = f"""
+               select module.*, sch.hall_id 
+               from schedule_hd sch_hd, schedule sch, modules module
+               where sch_hd.id = sch.hd_id
+               and sch.module_id = module.id
+               and sch_hd.year = {year}
+               and lower(sch.day) like lower('{dayName}')
+               and TIME(sch.time_from) < TIME('{hoursMinutes}')
+               and TIME(sch.time_to) > TIME('{hoursMinutes}');      
+            """   
+      cur.execute(sql)
+      classData = cur.fetchall()     
 
-   print(classData)     
+   print(f"This is available classes {classData}")     
       
-   #TODO : Get only right modules
+   #TODO : Get only modules for that user !!
  
    return render_template('home.html', title = "home page", classData = classData)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():    
    if request.method == 'POST':
+      # Create cursor
+      cur = db.connection.cursor() 
+
       # Get Form Fileds
       username = request.form['username']
       password_candidate = request.form['password']      
       
-      # Create cursor
-      cur = db.connection.cursor() 
 
       # Get system users
       sql = "select * from users where username = '{}';".format(username)
       result = cur.execute(sql)
-      result = cur.fetchall()             
+      result = cur.fetchone()             
             
       if len(result) > 0 :             
-         password = result[0]['pwd']         
-         user_id = result[0]['id']
+         password = result['pwd']         
+         user_id = result['id']
+         year = result['year']
+         major_id = result['major_id']
+         grp_id = result['grp_id']
 
-         is_admin = 'Y' if result[0]['usertype'] == 'A' else 'N'          
-         is_student = 'Y' if result[0]['usertype'] == 'S' else 'N'          
-         is_teacher = 'Y' if result[0]['usertype'] == 'T' else 'N'          
+         is_admin = 'Y' if result['usertype'] == 'A' else 'N'          
+         is_student = 'Y' if result['usertype'] == 'S' else 'N'          
+         is_teacher = 'Y' if result['usertype'] == 'T' else 'N'          
          
          # Compare Passwords     
          # if bcrypt.check_password_hash(password, password_candidate):            
@@ -96,6 +106,9 @@ def login():
             session['is_admin'] = is_admin                                
             session['is_student'] = is_student                                
             session['is_teacher'] = is_teacher 
+            session['year'] = year 
+            session['major_id'] = major_id 
+            session['grp_id'] = grp_id 
 
             return redirect(url_for('home_page'))               
          else :            
@@ -127,7 +140,6 @@ def users():
    schData = cur.fetchall()       
 
    return render_template('users.html', title = "users", usersData = usersData, schData=schData)
-
 
 @app.route('/user_edit', defaults={'user_id':None})
 @app.route('/user_edit/<int:user_id>')
@@ -189,7 +201,6 @@ def save_users():
    else :
       absolute_path = ''
    
-
    if id == '':
       cur.execute("select IFNULL(max(id),0)+1 as id from users")
       res = cur.fetchone()        
@@ -249,19 +260,28 @@ def schedule():
    # Get System Users
    cur.execute("SET @row_number = 0;")   
    sql= """
-         select (@row_number:=@row_number + 1) AS row_num, sch.id, grp.name grpname, grp.id grp_id, major.name as major_name,
-         case 
-         when sch.year = 1 then 'Prep'
-         when sch.year = 2 then 'Y1'
-         when sch.year = 3 then 'Y2'
-         when sch.year = 4 then 'Y3'
-         when sch.year = 5 then 'Y4'
-         else ''
-         end as year , sch.year as year_id        
-         from schedule_hd sch, sch_groups grp, majors major
-         where sch.grp_id = grp.id
-         and sch.major_id = major.id
-         group by grp.name, year, major.name;      
+            select 
+               (@row_number:=@row_number + 1) AS row_num, 
+               sch.id, 
+               grp.name grpname, 
+               grp.id grp_id, 
+               major.name as major_name,
+               case 
+               when sch.year = 1 then 'Prep'
+               when sch.year = 2 then 'Y1'
+               when sch.year = 3 then 'Y2'
+               when sch.year = 4 then 'Y3'
+               when sch.year = 5 then 'Y4'
+               else ''
+               end as year, 
+               sch.year as year_id        
+            from 
+               schedule_hd as sch
+               left join sch_groups as grp
+               on sch.grp_id = grp.id
+               inner join majors as major
+               on sch.major_id = major.id
+            group by grp.name, year, major.name;     
         """            
    result = cur.execute(sql)
    data = cur.fetchall()                
@@ -477,7 +497,6 @@ def save_sch():
 
    return redirect(url_for('sch_edit', id=hd_id))
 
-
 @app.route('/del_sch/<int:id>' , methods=['POST', 'GET'])
 @is_logged_in
 def del_sch(id):    
@@ -609,6 +628,7 @@ def save_class():
 
    return redirect(url_for('classes'))   
 
+# Halls
 @app.route('/halls')
 @is_logged_in
 def halls():    
@@ -653,6 +673,7 @@ def save_hall():
    id = request.form.getlist('id')
    # code = request.form.getlist('code')    
    name = request.form.getlist('name')     
+   floor = request.form.getlist('floor')     
    lat = request.form.getlist('lat')  
    lang = request.form.getlist('lang')  
 
@@ -667,8 +688,8 @@ def save_hall():
             id = res['id']                        
             
             sql = f"""
-                  insert into halls (id, name, loc_lat, loc_lang)
-                  values ({id}, '{name[x]}', '{lat[x]}', {lang[x]});      
+                  insert into halls (id, name, floor, loc_lat, loc_lang)
+                  values ({id}, '{name[x]}', {floor[x]}, '{lat[x]}', {lang[x]});      
                   """               
          else:
             sql = f"""
@@ -676,6 +697,7 @@ def save_hall():
                      halls
                   set 
                       name = '{name[x]}',
+                      floor= {floor[x]},
                       loc_lat = '{lat[x]}',
                       loc_lang = '{lang[x]}'                      
                   where 
@@ -692,8 +714,8 @@ def save_hall():
          res = cur.fetchone()        
          id = res['id']                     
          sql = f"""
-               insert into halls (id, name, loc_lat, loc_lang)
-               values ({id}, '{name[0]}', '{lat[0]}', {lang[0]});      
+               insert into halls (id, name, floor, loc_lat, loc_lang)
+               values ({id}, '{name[0]}', {floor[0]}, '{lat[0]}', {lang[0]});      
                """             
       else :   
             sql = f"""
@@ -701,6 +723,7 @@ def save_hall():
                      halls
                   set                   
                       name = '{name[0]}',
+                      floor= {floor[x]},
                       loc_lat = '{lat[0]}',
                       loc_lang = '{lang[0]}'                      
                   where 
@@ -712,8 +735,207 @@ def save_hall():
    else :    
       flash('Please Add At least one record before saving ', 'alert-info') 
 
-   return redirect(url_for('halls'))     
+   return redirect(url_for('halls'))  
 
+# Majors
+@app.route('/majors')
+@is_logged_in
+def majors():    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   # Get System Users
+   cur.execute("SET @row_number = 0;")               
+   result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, majors.* from majors")
+   mainData = cur.fetchall()   
+   
+   return render_template('majors.html', title = "Majors", mainData = mainData)
+
+@app.route('/del_major/<int:ID>')
+@is_logged_in
+def delete_major(ID):    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   sql = f"update users set major_id = null where major_id = {ID}"
+   cur.execute(sql)
+   db.connection.commit()        
+
+   sql = f"delete from majors where id = {ID}"
+   cur.execute(sql)
+   db.connection.commit()        
+
+   flash("Data updated Successfully", "alert-success")   
+   return redirect(url_for('majors'))     
+
+@app.route('/save_major', methods=['GET', 'POST'])
+@is_logged_in
+def save_major():    
+   # Create cursor
+   cur = db.connection.cursor()      
+
+   #Storing Data into variables
+   id = request.form.getlist('id')   
+   code = request.form.getlist('code')   
+   name = request.form.getlist('name')     
+
+
+   #Getting lenght of a required value list
+   listLength = len(id)
+
+   if listLength > 1:    
+      for x in range (0, listLength):                                            
+         if id[x] == '':
+            cur.execute("select IFNULL(max(id),0)+1 as id from majors")
+            res = cur.fetchone()        
+            id = res['id']                        
+            
+            sql = f"""
+                  insert into majors (id, name, code)
+                  values ({id}, '{name[x]}', '{code[x]}');      
+                  """               
+         else:
+            sql = f"""
+                  update 
+                     majors
+                  set 
+                      name = '{name[x]}',                  
+                      code = '{code[x]}'                  
+                  where 
+                     id = {id[x]};      
+                  """                   
+         result = cur.execute(sql)      
+         db.connection.commit()    
+      # FeedBack
+      flash('Data Updated Successfully', 'alert-success')                                                                               
+   elif listLength == 1 :                                                  
+      #If Id is null insert new user
+      if id[0] == '':
+         cur.execute("select IFNULL(max(id),0)+1 as id from majors")
+         res = cur.fetchone()        
+         id = res['id']                     
+         sql = f"""
+               insert into majors (id, name, code)
+               values ({id}, '{name[0]}', '{code[0]}');      
+               """             
+      else :   
+            sql = f"""
+                  update 
+                     majors
+                  set                   
+                      name = '{name[0]}',
+                      code = '{code[0]}'                   
+                  where 
+                     id = {id[0]}; 
+                  """        
+      result = cur.execute(sql)      
+      db.connection.commit()          
+      flash('Data Updated Successfully', 'alert-success')                     
+   else :    
+      flash('Please Add At least one record before saving ', 'alert-info') 
+
+   return redirect(url_for('majors'))  
+
+# Groups
+@app.route('/groups')
+@is_logged_in
+def groups():    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   # Get System Users
+   cur.execute("SET @row_number = 0;")               
+   result = cur.execute("select (@row_number:=@row_number + 1) AS row_num, sch_groups.* from sch_groups")
+   mainData = cur.fetchall()   
+   
+   return render_template('groups.html', title = "Groups", mainData = mainData)
+
+@app.route('/del_grp/<int:grpID>')
+@is_logged_in
+def delete_grp(grpID):    
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   sql = f"update schedule_hd set grp_id = null where grp_id = {grpID}"
+   cur.execute(sql)
+   db.connection.commit()     
+
+   sql = f"update users set grp_id = null where grp_id = {grpID}"
+   cur.execute(sql)
+   db.connection.commit()        
+
+   sql = f"delete from sch_groups where id = {grpID}"
+   cur.execute(sql)
+   db.connection.commit()        
+
+   flash("Data updated Successfully", "alert-success")   
+   return redirect(url_for('groups'))     
+
+@app.route('/save_grp', methods=['GET', 'POST'])
+@is_logged_in
+def save_grp():    
+   # Create cursor
+   cur = db.connection.cursor()      
+
+   #Storing Data into variables
+   id = request.form.getlist('id')   
+   name = request.form.getlist('name')     
+
+   #Getting lenght of a required value list
+   listLength = len(id)
+
+   if listLength > 1:    
+      for x in range (0, listLength):                                            
+         if id[x] == '':
+            cur.execute("select IFNULL(max(id),0)+1 as id from sch_groups")
+            res = cur.fetchone()        
+            id = res['id']                        
+            
+            sql = f"""
+                  insert into sch_groups (id, name)
+                  values ({id}, '{name[x]}');      
+                  """               
+         else:
+            sql = f"""
+                  update 
+                     sch_groups
+                  set 
+                      name = '{name[x]}'                   
+                  where 
+                     id = {id[x]};      
+                  """                   
+         result = cur.execute(sql)      
+         db.connection.commit()    
+      # FeedBack
+      flash('Data Updated Successfully', 'alert-success')                                                                               
+   elif listLength == 1 :                                                  
+      #If Id is null insert new user
+      if id[0] == '':
+         cur.execute("select IFNULL(max(id),0)+1 as id from sch_groups")
+         res = cur.fetchone()        
+         id = res['id']                     
+         sql = f"""
+               insert into sch_groups (id, name)
+               values ({id}, '{name[0]}');      
+               """             
+      else :   
+            sql = f"""
+                  update 
+                     sch_groups
+                  set                   
+                      name = '{name[0]}'                  
+                  where 
+                     id = {id[0]}; 
+                  """        
+      result = cur.execute(sql)      
+      db.connection.commit()          
+      flash('Data Updated Successfully', 'alert-success')                     
+   else :    
+      flash('Please Add At least one record before saving ', 'alert-info') 
+
+   return redirect(url_for('groups'))     
+
+# Take attendance
 @app.route('/takeattendance/<string:classID>/<int:hallID>', methods=['GET', 'POST'])
 @is_logged_in
 def take_attendance(classID, hallID):   
@@ -796,6 +1018,32 @@ def face_auth():
 @app.route('/attendancerep', methods=['GET', 'POST'])
 @is_logged_in
 def attendancerep():
+   # Cursor
+   cur = db.connection.cursor() 
+   # Set row count to 0   
+   cur.execute("SET @row_number = 0;")               
+
+   cur.execute("""select (@row_number:=@row_number + 1) AS row_num, 
+                  att.date, TIME(att.time) time, usr.name username,module.name modname,
+                  case 
+                  when usr.year = 1 then 'Prep'
+                  when usr.year = 2 then 'Y1'
+                  when usr.year = 3 then 'Y2'
+                  when usr.year = 4 then 'Y3'
+                  when usr.year = 5 then 'Y4'
+                  else ''
+                  end as year                    
+                  from attendance att, users usr, modules module
+                  where att.user_id = usr.id
+                  and att.module_id = module.id 
+                  and usr.usertype = 'S'
+                  """)
+   data = cur.fetchall()     
+   return render_template('attendanceReport.html', title = "Attendance Report", data = data)
+   
+@app.route('/absenteeserep', methods=['GET', 'POST'])
+@is_logged_in
+def absentrep():
    # Cursor
    cur = db.connection.cursor() 
    # Set row count to 0   

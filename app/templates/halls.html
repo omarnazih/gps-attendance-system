@@ -23,6 +23,7 @@
           <tr class="bg-secondary text-light">
             <th width="6%">sn</th>            
             <th>Name</th>
+            <th>Floor</th>
             <th>Lat</th>
             <th>Long</th>
             <th width="2%">Get Location</th>
@@ -39,6 +40,9 @@
             <td>
               <input type="hidden" name="id" value="{{row.id}}">
               <input class="form-control" type="text" name="name" id="name" value="{{row.name}}" required>
+            </td>
+            <td>
+              <input class="form-control" type="text" name="floor" id="floor" value="{{row.floor}}" required>
             </td>
             <td>
               <input class="form-control" type="text" name="lat" id="lat" value="{{row.loc_lat}}" required>
@@ -70,6 +74,9 @@
               <input type="hidden" name="id" value="">
               <input class="form-control" type="text" name="name" id="name" value="" required>
             </td>
+            <td>
+              <input class="form-control" type="text" name="floor" id="floor" value="" required>
+            </td>            
             <td>
               <input class="form-control" type="text" name="lat" id="lat" value="" required>
             </td>
@@ -104,7 +111,11 @@ function addNewRecord() {
   let sn = document.querySelectorAll('#sn');  
   const table = document.querySelector("#editableTable");
 
-  $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td><input class="form-control" type="text" name="name" id="name" value="" required=""> <input type="hidden" name="id" value=""></td><td> <input class="form-control" type="text" name="lat" id="lat" value="" required> </td><td> <input class="form-control" type="text" name="lang" id="lang" value="" required>
+  $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td><input class="form-control" type="text" name="name" id="name" value="" required=""> <input type="hidden" name="id" value=""></td>
+    <td>
+              <input class="form-control" type="text" name="floor" id="floor" value="" required>
+            </td>     
+    <td> <input class="form-control" type="text" name="lat" id="lat" value="" required> </td><td> <input class="form-control" type="text" name="lang" id="lang" value="" required>
     <td style="text-align: center;">
               <a class="button button-small edit" id="getLoc" title="getLocation"
                 onclick="getLocation(this)">

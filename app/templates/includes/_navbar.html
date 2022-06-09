@@ -18,7 +18,13 @@
       <ul class="navbar-nav me-auto mb-2 mb-md-0">
         {% if session.is_admin == 'Y' or  session.is_teacher == 'Y' %}
         <li class="nav-item">
+          <a class="nav-link" aria-current="page" href="{{url_for('majors')}}">Majors</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" aria-current="page" href="{{url_for('classes')}}">Modules</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" href="{{url_for('groups')}}">Groups</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" aria-current="page" href="{{url_for('users')}}">Users</a>
@@ -29,13 +35,20 @@
         <li class="nav-item">
           <a class="nav-link" aria-current="page" href="{{url_for('schedule')}}">Schedule</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="{{url_for('attendancerep')}}">Attendance Report</a>
-        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Attendance Reports
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+            <li class="nav-item">
+              <a class="nav-link" aria-current="page" href="{{url_for('attendancerep')}}">Participants Report</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" aria-current="page" href="{{url_for('absentrep')}}">Absentess Report</a>
+            </li>
+          </ul>
+        </li>        
         {%endif%}
-        <!-- <li class="nav-item">
-          <a class="nav-link" href="#">Link</a>
-        </li> -->
       </ul>
       <!-- For user -->
       <span class="d-flex"> 

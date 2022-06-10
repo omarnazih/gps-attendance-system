@@ -99,3 +99,57 @@ def update_sch_dt(row):
     db.connection.commit()                    
 
     return True
+
+def getStudentsCount():
+    # Curssor
+    conn = db.connection.cursor()      
+    sql = f"""
+        select count(id) count
+        from users
+        where usertype = 'S';
+    """    
+    conn.execute(sql)   
+    res = conn.fetchone() 
+    print(res['count'] )
+
+    return res['count']  
+
+def getTeachersCount():
+    # Curssor
+    conn = db.connection.cursor()      
+    sql = f"""
+        select count(id) count
+        from users
+        where usertype = 'T';
+    """    
+    conn.execute(sql)   
+    res = conn.fetchone() 
+    print(res['count'])
+
+    return res['count']
+    
+def getAttendaceCount():
+    # Curssor
+    conn = db.connection.cursor()      
+    sql = f"""
+        select count(id) count
+        from attendance;
+    """    
+    conn.execute(sql)   
+    res = conn.fetchone() 
+    print(res['count'] )
+
+    return res['count'] 
+
+def getClassesCount():
+    # Curssor
+    conn = db.connection.cursor()      
+    sql = f"""
+        select count(id) count
+        from modules;
+    """    
+    conn.execute(sql)   
+    res = conn.fetchone() 
+    print(res['count'] )
+
+    return res['count']    

@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
 {% from "includes/_macros.html" import draw_card %}
+{% from "includes/_dashboard.html" import dashboard %}
 
 {% block title %}
   {{title}}
 {% endblock %}
 
-{% block css %}  
+{% block css %}
+  <!-- Icon Font Stylesheet -->
+  <link href="{{ url_for('static', filename='css/dashboard.css')}}" rel="stylesheet">  
 {% endblock %}
 
 {% block hero %}
@@ -13,6 +16,7 @@
 {% endblock %} 
 
 {% block classList %}
+{% if session.is_student == 'Y'%}
  {% if classData %}
   <div class="row">
     {% for class in classData %}
@@ -20,4 +24,9 @@
     {% endfor %}  
   </div>
  {% endif %}
+{% else %}
+  {% if dashboardData %}
+    {{dashboard(dashboardData.studentsCount, dashboardData.teachersCount, dashboardData.attendanceCount, dashboardData.classesCount, dashboardData.emailsCount)}}
+  {% endif %}
+{% endif %} 
 {% endblock %}

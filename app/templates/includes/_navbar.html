@@ -26,9 +26,11 @@
         <li class="nav-item">
           <a class="nav-link" aria-current="page" href="{{url_for('groups')}}">Groups</a>
         </li>
+        {% if session.is_admin =='Y'%}
         <li class="nav-item">
           <a class="nav-link" aria-current="page" href="{{url_for('users')}}">Users</a>
         </li>
+        {% endif %}
         <li class="nav-item">
           <a class="nav-link" aria-current="page" href="{{url_for('halls')}}">Halls</a>
         </li>
@@ -43,9 +45,6 @@
             <li class="nav-item">
               <a class="nav-link" aria-current="page" href="{{url_for('attendancerep')}}">Participants Report</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="{{url_for('absentrep')}}">Absentess Report</a>
-            </li>
           </ul>
         </li>        
         {%endif%}
@@ -53,7 +52,8 @@
       <!-- For user -->
       <span class="d-flex"> 
         {% if session.logged_in %}
-          <a href="{{url_for('logout')}}" class="nav-link active fw-bold text-light" >{{session.username}}</a>
+        <a href="#" class="nav-link active fw-bold text-light" >User: {{session.username}}</a>
+        <a href="{{url_for('logout')}}" class="nav-link active fw-bold text-light" >Logout</a>
         {% endif %}
       </span>
     </div>

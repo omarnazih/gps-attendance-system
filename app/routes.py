@@ -6,17 +6,10 @@ from flask import Flask, jsonify,session, render_template, request, redirect, ur
 from functools import wraps
 from app.facialauth import checkSamePerson
 from app.dbhelpers import *
+from app.helpersfn import *
 import datetime
 
-def ifEmpty(var, val):
-  if var == '':
-    return val
-  return var
 
-def nvl(var):
-  if var == '':
-    return 'null'
-  return var
 
 # Check if user logged in
 def is_logged_in(f):
@@ -38,36 +31,43 @@ def home_page():
    # Create cursor
    cur = db.connection.cursor() 
    
-   now = datetime.datetime.now()
-   dayName = now.strftime("%A")
-   # Current Day
+   dayName = getDay()   
    print(f"Day is {dayName}")   
 
-   hoursMinutes = f"{now.hour}:{now.minute}"
-
-   print(hoursMinutes)
+   hoursMinutes = getTimeHM()
+   print(f"Time is {hoursMinutes}")
 
    classData=[]
-   if session['year']:
+   if session['year'] and session['major_id'] and session['grp_id']:
       year = session['year']
+      major_id = session['major_id']
+      grp_id = session['grp_id']
       sql = f"""
                select module.*, sch.hall_id 
                from schedule_hd sch_hd, schedule sch, modules module
                where sch_hd.id = sch.hd_id
                and sch.module_id = module.id
                and sch_hd.year = {year}
+               and sch_hd.major_id = {major_id}
+               and sch_hd.grp_id = {grp_id}
                and lower(sch.day) like lower('{dayName}')
                and TIME(sch.time_from) < TIME('{hoursMinutes}')
                and TIME(sch.time_to) > TIME('{hoursMinutes}');      
             """   
       cur.execute(sql)
       classData = cur.fetchall()     
+   
+   dashboardData={}
+   if session['is_admin'] == 'Y' or session['is_teacher'] == 'Y':
+      dashboardData = {'studentsCount': getStudentsCount(), 
+                        'teachersCount': getTeachersCount(),
+                        'attendanceCount': getAttendaceCount(),
+                        'classesCount': getClassesCount(),
+                        'emailsCount': 0,
+                     }      
+    
 
-   print(f"This is available classes {classData}")     
-      
-   #TODO : Get only modules for that user !!
- 
-   return render_template('home.html', title = "home page", classData = classData)
+   return render_template('home.html', title = "home page", classData = classData, dashboardData=dashboardData)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():    
@@ -79,7 +79,6 @@ def login():
       username = request.form['username']
       password_candidate = request.form['password']      
       
-
       # Get system users
       sql = "select * from users where username = '{}';".format(username)
       result = cur.execute(sql)
@@ -162,7 +161,12 @@ def user_edit(user_id):
                   from sch_groups""")
    grpData = cur.fetchall() 
 
-   return render_template('useredit.html', title = "User Edit", usersData = usersData, userTypeCombo= userTypeCombo, grpData=grpData, yearsCombo=yearsCombo)
+   cur.execute("""
+                  select id, name 
+                  from majors""")
+   majorCombo = cur.fetchall() 
+
+   return render_template('useredit.html', title = "User Edit", usersData = usersData, userTypeCombo= userTypeCombo, grpData=grpData, yearsCombo=yearsCombo, majorCombo=majorCombo)
 
 @app.route('/save_users', methods=['GET', 'POST'])
 @is_logged_in
@@ -177,6 +181,7 @@ def save_users():
    password = request.form.get('password') 
    email = request.form.get('email') 
    usertype = request.form.get('usertype')  
+   major = request.form.get('major')  
    year = request.form.get('year')  
    notes = request.form.get('notes')  
    grp = request.form.get('grp') 
@@ -207,8 +212,8 @@ def save_users():
       id = res['id']                        
 
       sql = f"""
-            insert into users (id, username, pwd, name, email, notes, grp_id, year, usertype, picture)
-            values ({id}, '{username}' , '{password}', '{name}', '{email}', '{notes}', {nvl(grp)}, {nvl(year)}, '{nvl(usertype)}', '{absolute_path}');      
+            insert into users (id, username, pwd, name, email, notes, grp_id, year, usertype, major_id, picture)
+            values ({id}, '{username}' , '{password}', '{name}', '{email}', '{notes}', {nvl(grp)}, {nvl(year)}, '{nvl(usertype)}', '{nvl(major)}', '{absolute_path}');      
             """               
    else:
       sql = f"""
@@ -223,6 +228,7 @@ def save_users():
                   grp_id = {nvl(grp)},
                   year = {nvl(year)},
                   usertype = '{nvl(usertype)}',
+                  major_id = '{nvl(major)}',
                   picture = '{absolute_path}'
             where 
                id = {id};      
@@ -1017,7 +1023,7 @@ def face_auth():
 
 @app.route('/attendancerep', methods=['GET', 'POST'])
 @is_logged_in
-def attendancerep():
+def attendancerep():      
    # Cursor
    cur = db.connection.cursor() 
    # Set row count to 0   
@@ -1038,31 +1044,7 @@ def attendancerep():
                   and att.module_id = module.id 
                   and usr.usertype = 'S'
                   """)
-   data = cur.fetchall()     
-   return render_template('attendanceReport.html', title = "Attendance Report", data = data)
-   
-@app.route('/absenteeserep', methods=['GET', 'POST'])
-@is_logged_in
-def absentrep():
-   # Cursor
-   cur = db.connection.cursor() 
-   # Set row count to 0   
-   cur.execute("SET @row_number = 0;")               
+   data = cur.fetchall() 
 
-   cur.execute("""select (@row_number:=@row_number + 1) AS row_num, 
-                  att.date, TIME(att.time) time, usr.name username,module.name modname,
-                  case 
-                  when usr.year = 1 then 'Prep'
-                  when usr.year = 2 then 'Y1'
-                  when usr.year = 3 then 'Y2'
-                  when usr.year = 4 then 'Y3'
-                  when usr.year = 5 then 'Y4'
-                  else ''
-                  end as year                    
-                  from attendance att, users usr, modules module
-                  where att.user_id = usr.id
-                  and att.module_id = module.id 
-                  and usr.usertype = 'S' """)
-   data = cur.fetchall()     
    return render_template('attendanceReport.html', title = "Attendance Report", data = data)
    

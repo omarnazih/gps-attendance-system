@@ -48,9 +48,13 @@
         <label class="form-label">Year</label>
         {{comboBox('year', yearsCombo, row.year)}}
       </div>  
-      <div class="col-6">        
+      <div class="col-3">        
         <label class="form-label">User Type</label>
         {{comboBox('usertype', userTypeCombo, row.usertype)}}
+      </div>  
+      <div class="col-3">        
+        <label class="form-label">Major</label>
+        {{comboBox('major', majorCombo, row.major_id)}}
       </div>  
     </div>  
 
@@ -109,7 +113,11 @@
         <label class="form-label">Year</label>
         {{comboBox('year', yearsCombo, '')}}
       </div>  
-      <div class="col-6">        
+      <div class="col-3">        
+        <label class="form-label">Major</label>
+        {{comboBox('major', majorCombo, '')}}
+      </div>  
+      <div class="col-3">        
         <label class="form-label">User Type</label>
         {{comboBox('usertype', userTypeCombo, '')}}
       </div>  

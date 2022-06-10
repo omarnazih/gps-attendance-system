@@ -2,7 +2,9 @@
   <!-- <img class="d-block mx-auto mb-4" src="../assets/brand/bootstrap-logo.svg" alt="" width="72" height="57"> -->
   {% if session.logged_in %}
     <h1 class="display-5 fw-bold text-capitalize">Welcome {{ session.username }}</h1>
-  {% endif %}    
+  {% endif %}   
+  
+  {% if session.is_student == 'Y'%}
   <div class="col-lg-6 mx-auto">
     <p class="lead mb-4 text-capitalize fw-bold">Choose One of Available Classes Below to take Attendance</p>
     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
@@ -10,4 +12,5 @@
       <!-- <button type="button" class="btn btn-outline-secondary btn-lg px-4">Secondary</button> -->
     </div>
   </div>
+  {% endif %}
 </div>

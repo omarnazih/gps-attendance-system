@@ -1053,4 +1053,33 @@ def attendancerep():
    data = cur.fetchall() 
 
    return render_template('attendanceReport.html', title = "Attendance Report", data = data)
-   
+
+@app.route('/getHalls', methods=['GET', 'POST'])
+@is_logged_in
+def gethalls():
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   sql = "select id, name from halls"
+   cur.execute(sql)
+   res=cur.fetchall()
+
+   if res:
+      return jsonify(response=res)
+   else:
+      return jsonify(response='')
+
+@app.route('/getModules', methods=['GET', 'POST'])
+@is_logged_in
+def getModules():
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   sql = "select id, name from modules"
+   cur.execute(sql)
+   res=cur.fetchall()
+
+   if res:
+      return jsonify(response=res)
+   else:
+      return jsonify(response='')

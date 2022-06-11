@@ -12,6 +12,7 @@ import datetime
 
 
 # Check if user logged in
+# If user logged in then allow else redirect for loing!
 def is_logged_in(f):
     @wraps(f)
     def wrap(*args, **kwargs):
@@ -28,7 +29,7 @@ def is_logged_in(f):
 @app.route('/home')
 @is_logged_in
 def home_page():  
-   # Create cursor
+   # Create cursor (through the connection we have with database)
    cur = db.connection.cursor() 
    
    dayName = getDay()   
@@ -38,6 +39,8 @@ def home_page():
    print(f"Time is {hoursMinutes}")
 
    classData=[]
+   # If user have year, major and group values then he is allowed to see attendance cards
+   # else show dashboard  
    if session['year'] and session['major_id'] and session['grp_id']:
       year = session['year']
       major_id = session['major_id']
@@ -66,7 +69,6 @@ def home_page():
                         'emailsCount': 0,
                      }      
     
-
    return render_template('home.html', title = "home page", classData = classData, dashboardData=dashboardData)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -75,15 +77,16 @@ def login():
       # Create cursor
       cur = db.connection.cursor() 
 
-      # Get Form Fileds
+      # Get Form Fileds (sent from form)
       username = request.form['username']
       password_candidate = request.form['password']      
       
-      # Get system users
+      # Get system users data
       sql = "select * from users where username = '{}';".format(username)
       result = cur.execute(sql)
       result = cur.fetchone()             
-            
+
+      # Storing Session data
       if len(result) > 0 :             
          password = result['pwd']         
          user_id = result['id']
@@ -941,7 +944,7 @@ def save_grp():
 
    return redirect(url_for('groups'))     
 
-# Take attendance
+# Take attendance (receive classid and hallid as parametes to store in attendance table)
 @app.route('/takeattendance/<string:classID>/<int:hallID>', methods=['GET', 'POST'])
 @is_logged_in
 def take_attendance(classID, hallID):   
@@ -949,7 +952,6 @@ def take_attendance(classID, hallID):
    cur = db.connection.cursor() 
 
    if request.method == 'GET':
-
       # Get Data
       sql = "select * from modules where id = '{}';".format(classID)
       result = cur.execute(sql)
@@ -986,6 +988,10 @@ def take_attendance(classID, hallID):
    else :
       return jsonify(response="Something went wrong!!, Please Make sure you registered as student before taking attendance")                        
 
+# Params : image, classid, hallid
+# Functionality : Validates user image through checkSamePerson() available in facialauth.py that 
+# checks if the the same person or not.
+# if same person it returns true and location data if not it send a message that's not the same person.
 @app.route('/faceauth', methods=['GET', 'POST'])
 @is_logged_in
 def face_auth():   

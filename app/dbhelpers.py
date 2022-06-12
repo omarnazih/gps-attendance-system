@@ -1,42 +1,49 @@
-from flask import flash
+from flask import flash, redirect, url_for
 from app import db, dbhelpers
+
+def validateSchHD(major, year, grp):
+    conn = db.connection.cursor()      
+
+    sql = f"""select 1 res from schedule_hd where major_id = {major} and year = {year} and grp_id = {grp};"""
+    conn.execute(sql)     
+    res = conn.fetchone()
+    
+    if res:
+        return False
+    else :
+        return True
+
 def save_sch_hd(row):
     recordId =''
     conn = db.connection.cursor()      
 
-    placeholders = ', '.join(['%s'] * len(row))
-    columns = ', '.join(row.keys())   
+    if validateSchHD(row['major_id'], row['year'], row['grp_id']):
+
+        placeholders = ', '.join(['%s'] * len(row))
+        columns = ', '.join(row.keys())           
+
+        sql = "select IFNULL(max(id),0)+1 id from schedule_hd;"
+        conn.execute(sql)     
+        recordId = conn.fetchone()
+
+        row['id'] = recordId['id']
+        new_hd_id = row['id']                     
         
-    # recordIdQuery = "select IFNULL(max(id),0)+1 id from schedule_hd;"        
-    # recordId = conn.execute(recordIdQuery).fetchall()
-
-    sql = "select IFNULL(max(id),0)+1 id from schedule_hd;"
-    conn.execute(sql)     
-    recordId = conn.fetchone()
-
-    row['id'] = recordId['id']
-    new_hd_id = row['id']                     
+        finalRecord = list(row.values())  
+        sql = "Insert into schedule_hd ( {} ) VALUES ( {} )".format(columns, placeholders)               
     
-    finalRecord = list(row.values())  
-    sql = "Insert into schedule_hd ( {} ) VALUES ( {} )".format(columns, placeholders)               
-    # sql = f"""
-    #       insert into schedule_hd 
-    #           (`id`,
-    #           `major_id`,
-    #           `year`,
-    #           `grp_id`)
-    #       values 
-    #           ({new_hd_id}, {row['major_id']} , {row['year']}, {row['grp_id']});      
-    #       """     
-    conn.execute(sql,finalRecord)  
-    db.connection.commit()                
+        conn.execute(sql,finalRecord)  
+        db.connection.commit()                
 
-    print(sql )
-    
-    #FeedBack
-    flash('Data Saved Successfully', 'alert-success')         
-    conn.close() 
-    return new_hd_id
+        print(sql )
+        
+        #FeedBack
+        flash('Data Saved Successfully', 'alert-success')         
+        conn.close() 
+        return new_hd_id
+    else:
+        flash('Recorde Already Stored in database', 'alert-danger')         
+        return
 
 def save_sch_dt(row):
     recordId =''
@@ -44,7 +51,7 @@ def save_sch_dt(row):
 
     placeholders = ', '.join(['%s'] * len(row))
     columns = ', '.join(row.keys())   
- 
+    
     sql = "select IFNULL(max(id),0)+1 id  from schedule;"
     conn.execute(sql)     
     recordId = conn.fetchone()

@@ -91,6 +91,35 @@
 {% block javascript %}
 <script src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
 <script>
+async function fetchMajors() {  
+  const url = `${window.origin}/getMajors`;
+  const res = await fetch(url, {
+        method: "POST", // *GET, POST, PUT, DELETE, etc.          
+        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+        }        
+      });    
+  const data = await res.json()
+  const parsedData = data.response
+    
+  const Combo = document.querySelectorAll('#major');
+  
+  Combo.forEach(selectBox => {
+    let sbOption = selectBox.options;
+    console.log(sbOption.length)
+    if (sbOption.length === 0){
+      parsedData.forEach(element => {
+        const elm = `
+          <option value=${element.id}>${element.name}</option>
+        `
+        selectBox.innerHTML += elm;        
+      }); 
+    }
+  }) 
+}   
+
 // Add New Record
 const addRowBtn = document.querySelector(".add-row");
 addRowBtn.addEventListener('click', addNewRecord);
@@ -98,7 +127,8 @@ function addNewRecord() {
   let sn = document.querySelectorAll('#sn');  
   const table = document.querySelector("#editableTable");
 
-  $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td> <input type="hidden" name="id" value=""> <input class="form-control" type="text" name="code" id="code" value="" required=""> </td><td> <input class="form-control" type="text" name="name" id="name" value="" required=""> </td><td> <input class="form-control" type="text" name="desc" id="desc" value=""> </td><td> <select class="form-select form-select-sm" name="major" id="major"> <option value="" selected=""></option></select> </td><td style="text-align: center;"> <a class="button button-small edit" href="" title="Delete" onclick="delRecord(this)"> <i class="fa fa-trash fa-lg"></i> </a> </td></tr>`);  
+  $("#editableTable").find("tbody tr:last").after(`<tr> <td> <input class="form-control" type="text" id="sn" readonly="true" value="${sn.length+1}"> </td><td> <input type="hidden" name="id" value=""> <input class="form-control" type="text" name="code" id="code" value="" required=""> </td><td> <input class="form-control" type="text" name="name" id="name" value="" required=""> </td><td> <input class="form-control" type="text" name="desc" id="desc" value=""> </td><td> <select class="form-select form-select-sm" name="major" id="major"></select> </td><td style="text-align: center;"> <a class="button button-small edit" href="" title="Delete" onclick="delRecord(this)"> <i class="fa fa-trash fa-lg"></i> </a> </td></tr>`);
+  fetchMajors();
 }  
 </script>
 {% endblock %}

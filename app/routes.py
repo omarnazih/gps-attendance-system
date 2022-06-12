@@ -393,114 +393,113 @@ def save_sch():
          'year': int(year),
          'grp_id': int(grp)
          } 
-         hd_id = save_sch_hd(row_hd)
+         hd_id = save_sch_hd(row_hd)         
 
-      if listLength > 1 and int(hd_id) > 0:         
-         for x in range (0, listLength): 
-            if slot[x] == '1':
+      if hd_id != None:
+         if listLength > 1 and int(hd_id) > 0:         
+            for x in range (0, listLength): 
+               if slot[x] == '1':
+                  time_from = '9:00'
+                  time_to = '9:55'
+               elif slot[x] == '2':
+                  time_from = '10:00'
+                  time_to = '10:55'                  
+               elif slot[x] == '3':
+                  time_from = '11:00'
+                  time_to = '11:55'                  
+               elif slot[x] == '4':
+                  time_from = '12:00'
+                  time_to = '12:55'                  
+               elif slot[x] == '5':
+                  time_from = '13:00'
+                  time_to = '13:55'                  
+               elif slot[x] == '6':
+                  time_from = '14:00'
+                  time_to = '14:55'    
+               else:
+                  time_from = ''                                      
+                  time_to = ''
+
+               if x >= len(dt_id):
+                  row={ 
+                     'id': None,
+                     'hd_id': hd_id, 
+                     'module_id': nvl(module[x]),
+                     'day': nvl(day[x]),
+                     'time_from': time_from,
+                     'time_to': time_to,
+                     'hall_id': nvl(hall[x])
+                     }    
+
+                  save_sch_dt(row)                                          
+               else:                     
+                  row={ 
+                     'id': ifEmpty(dt_id[x], None),
+                     'hd_id': hd_id, 
+                     'module_id': nvl(module[x]),
+                     'day': nvl(day[x]),
+                     'time_from': time_from,
+                     'time_to': time_to,
+                     'hall_id': nvl(hall[x])
+                     } 
+                  #If Id is null insert new user            
+                  if ifEmpty(dt_id[x], None) == None:
+                     save_sch_dt(row)          
+                  else :   
+                     update_sch_dt(row)   
+                                             
+         elif listLength == 1 and (hd_id != None or hd_id != ''):                   
+            if slot[0] == '1':
                time_from = '9:00'
                time_to = '9:55'
-            elif slot[x] == '2':
+            elif slot[0] == '2':
                time_from = '10:00'
                time_to = '10:55'                  
-            elif slot[x] == '3':
+            elif slot[0] == '3':
                time_from = '11:00'
                time_to = '11:55'                  
-            elif slot[x] == '4':
+            elif slot[0] == '4':
                time_from = '12:00'
                time_to = '12:55'                  
-            elif slot[x] == '5':
+            elif slot[0] == '5':
                time_from = '13:00'
                time_to = '13:55'                  
-            elif slot[x] == '6':
+            elif slot[0] == '6':
                time_from = '14:00'
                time_to = '14:55'    
             else:
                time_from = ''                                      
-               time_to = ''
+               time_to = '' 
 
-            if x >= len(dt_id):
+            while("" in dt_id) :
+               dt_id.remove('')                           
+            if len(dt_id) > 0:
+               row={ 
+                  'id': ifEmpty(dt_id[0], None),
+                  'hd_id': hd_id, 
+                  'module_id': nvl(module[0]),
+                  'day': nvl(day[0]),
+                  'time_from': time_from,
+                  'time_to': time_to,
+                  'hall_id': nvl(hall[0])
+                  } 
+               print("I'm here")
+               update_sch_dt(row)   
+            else :
                row={ 
                   'id': None,
                   'hd_id': hd_id, 
-                  'module_id': nvl(module[x]),
-                  'day': nvl(day[x]),
+                  'module_id': nvl(module[0]),
+                  'day': nvl(day[0]),
                   'time_from': time_from,
                   'time_to': time_to,
-                  'hall_id': nvl(hall[x])
-                  }    
+                  'hall_id': nvl(hall[0])
+                  }   
+               save_sch_dt(row)                                 
 
-               save_sch_dt(row)                                          
-            else:                     
-               row={ 
-                  'id': ifEmpty(dt_id[x], None),
-                  'hd_id': hd_id, 
-                  'module_id': nvl(module[x]),
-                  'day': nvl(day[x]),
-                  'time_from': time_from,
-                  'time_to': time_to,
-                  'hall_id': nvl(hall[x])
-                  } 
-               #If Id is null insert new user            
-               if ifEmpty(dt_id[x], None) == None:
-                  save_sch_dt(row)          
-               else :   
-                  update_sch_dt(row)   
-                    
-                      
-      elif listLength == 1 and (hd_id != None or hd_id != ''):                   
-         if slot[0] == '1':
-            time_from = '9:00'
-            time_to = '9:55'
-         elif slot[0] == '2':
-            time_from = '10:00'
-            time_to = '10:55'                  
-         elif slot[0] == '3':
-            time_from = '11:00'
-            time_to = '11:55'                  
-         elif slot[0] == '4':
-            time_from = '12:00'
-            time_to = '12:55'                  
-         elif slot[0] == '5':
-            time_from = '13:00'
-            time_to = '13:55'                  
-         elif slot[0] == '6':
-            time_from = '14:00'
-            time_to = '14:55'    
-         else:
-            time_from = ''                                      
-            time_to = '' 
+         else :    
+            flash('Please Add At least one record before saving ', 'alert-info')                           
 
-         while("" in dt_id) :
-            dt_id.remove('')         
-         print(f"this is lngth {len(dt_id)}")
-         print(dt_id)
-         if len(dt_id) > 0:
-            row={ 
-               'id': ifEmpty(dt_id[0], None),
-               'hd_id': hd_id, 
-               'module_id': nvl(module[0]),
-               'day': nvl(day[0]),
-               'time_from': time_from,
-               'time_to': time_to,
-               'hall_id': nvl(hall[0])
-               } 
-            print("I'm here")
-            update_sch_dt(row)   
-         else :
-            row={ 
-               'id': None,
-               'hd_id': hd_id, 
-               'module_id': nvl(module[0]),
-               'day': nvl(day[0]),
-               'time_from': time_from,
-               'time_to': time_to,
-               'hall_id': nvl(hall[0])
-               }   
-            save_sch_dt(row)                                 
-
-      else :    
-         flash('Please Add At least one record before saving ', 'alert-info')                           
    else :
       flash('Please Fill Major, Year and Group', 'alert-danger')
 
@@ -1076,6 +1075,21 @@ def getModules():
    cur = db.connection.cursor() 
 
    sql = "select id, name from modules"
+   cur.execute(sql)
+   res=cur.fetchall()
+
+   if res:
+      return jsonify(response=res)
+   else:
+      return jsonify(response='')
+
+@app.route('/getMajors', methods=['GET', 'POST'])
+@is_logged_in
+def getMajors():
+   # Create cursor
+   cur = db.connection.cursor() 
+
+   sql = "select id, name from majors"
    cur.execute(sql)
    res=cur.fetchall()
 

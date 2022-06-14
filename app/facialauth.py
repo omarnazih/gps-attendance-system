@@ -58,4 +58,4 @@ def checkSamePerson(baseImage, newImage, isBase64='N'):
         matches = face_recognition.compare_faces(encodedImage, encodeFace)
         print(matches[0])
         return matches[0]
-      
+        # Comment
